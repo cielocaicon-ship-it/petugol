@@ -1,0 +1,3383 @@
+/* =====================================================================
+   PetuGol · style.css
+   Hoja de estilos externa del juego.
+
+   Índice
+    1. Variables: colores, fuentes y medidas (todo en :root)
+    2. Base
+    3. Utilidades: texto solo para lectores de pantalla, foco visible, íconos
+    4. Botones
+    5. Pantalla de inicio
+    6. Formulario
+    7. Récords
+    8. Pantalla de juego y marcador
+    9. Estadio (canvas), avisos y fichas de poderes
+   10. Diálogos: pausa, cómo jugar y final
+   11. Online: sala, mini torneo y avisos del partido
+   12. Celular y pantallas pequeñas
+   13. Reducir movimiento
+   ===================================================================== */
+
+
+/* =====================================================================
+   1. VARIABLES
+   El juego es una noche de estadio, así que tiene un solo aspecto oscuro.
+   El JavaScript también lee estos colores para pintar la cancha en el canvas.
+   ===================================================================== */
+:root {
+  /* Noche de estadio: fondos y textos */
+  --noche: #0b1712;
+  --noche-media: #13261d;
+  --noche-clara: #1d3829;
+  --tinta: #f3f6ee;
+  --tinta-suave: #b9c9bd;
+  --borde-suave: #5a8770;   /* contraste 3.9:1: los bordes de los campos se distinguen (WCAG 1.4.11) */
+  --velo: rgba(4, 10, 7, 0.82);
+  --sombra: rgba(0, 0, 0, 0.3);
+  --sombra-fuerte: rgba(0, 0, 0, 0.55);
+  --reflector: rgba(255, 248, 214, 0.16);
+  --reflector-apagado: rgba(255, 248, 214, 0);
+  --vineta: rgba(0, 0, 0, 0.32);           /* viñeta de la cámara: bordes un poco más oscuros */
+  --foco: #6ff3ff;
+  --alerta: #ff7b6b;
+
+  /* Colores de cada JUGADOR en la interfaz (anillo, joystick, botones, marcador):
+     tu equipo amarillo y Petunia (o el visitante en online) fucsia. No cambian con la selección. */
+  --local: #ffd23f;
+  --local-oscuro: #9c7400;
+  --local-claro: #fff1a8;
+  --visitante: #ff3d9a;
+  --visitante-oscuro: #8f1350;
+
+  /* Detalles de los muñecos */
+  --guantes: #ff7a1a;
+  --botines: #161616;
+
+  /* Botines que se pueden elegir en el atuendo */
+  --botin-negro: #161616;
+  --botin-blanco: #f1f2ec;
+  --botin-dorado: #e5ad18;
+  --botin-fucsia: #ff4fa8;
+  --botin-celeste: #36c5ff;
+
+  /* Volumen: sombra del lado derecho de los muñecos y luz del balón */
+  --sombra-cuerpo: rgba(0, 0, 0, 0.17);
+  --balon-brillo: rgba(255, 255, 255, 0.85);
+  --balon-brillo-apagado: rgba(255, 255, 255, 0);
+  --balon-sombra: rgba(0, 0, 0, 0.38);
+
+  /* Letreros de jugada sobre la cancha (¡Atajadón!, ¡Al palo!...) */
+  --letrero-borde: #0b1712;
+  --ojos: #1a1a1a;
+
+  /* Camisetas de portero: el juego elige una que no se confunda con ningún equipo */
+  --arquero-1: #2ec4b6;
+  --arquero-2: #9b5de5;
+  --arquero-3: #ff8fab;
+  --arquero-4: #00bbf9;
+  --arquero-5: #ff924c;
+  --arquero-6: #3d3d46;
+
+  /* Selecciones: camiseta, detalle (rayas, banda, cuello, puños, escudo y número),
+     pantaloneta, medias, la camiseta de visitante con su detalle (se usa si los dos
+     equipos se parecen) y un color de acento para los filetes de los costados */
+  /* Colombia: amarilla, pantaloneta azul y medias rojas */
+  --col-camiseta: #fcd116;
+  --col-detalle: #0a3a8c;
+  --col-pantaloneta: #0a3a8c;
+  --col-medias: #ce1126;
+  --col-visita: #0a3a8c;
+  --col-visita-detalle: #fcd116;
+  --col-acento: #ce1126;   /* filetes de los costados (rojo) */
+  /* Brasil: amarilla con verde, pantaloneta azul */
+  --bra-camiseta: #ffdc02;
+  --bra-detalle: #0b8f3e;
+  --bra-pantaloneta: #1f49c7;
+  --bra-medias: #f4f4f4;
+  --bra-visita: #1f49c7;
+  --bra-visita-detalle: #ffdc02;
+  --bra-acento: #1f49c7;   /* filetes de los costados (azul) */
+  /* Argentina: rayas celestes y blancas, pantaloneta negra */
+  --arg-camiseta: #f4f4f4;
+  --arg-detalle: #6cace4;
+  --arg-pantaloneta: #1b1b1b;
+  --arg-medias: #f4f4f4;
+  --arg-visita: #23295c;
+  --arg-visita-detalle: #6cace4;
+  --arg-acento: #1b1b1b;   /* filetes de los costados (negro) */
+  /* México: verde, pantaloneta blanca, medias rojas */
+  --mex-camiseta: #0b6e4f;
+  --mex-detalle: #f4f4f4;
+  --mex-pantaloneta: #f4f4f4;
+  --mex-medias: #c8102e;
+  --mex-visita: #f4f4f4;
+  --mex-visita-detalle: #0b6e4f;
+  --mex-acento: #c8102e;   /* filetes de los costados (rojo) */
+  /* Uruguay: celeste, pantaloneta y medias negras */
+  --uru-camiseta: #5cb8e6;
+  --uru-detalle: #f4f4f4;
+  --uru-pantaloneta: #111111;
+  --uru-medias: #111111;
+  --uru-visita: #f4f4f4;
+  --uru-visita-detalle: #5cb8e6;
+  --uru-acento: #111111;   /* filetes de los costados (negro) */
+  /* Perú: blanca con banda roja */
+  --per-camiseta: #f4f4f4;
+  --per-detalle: #d91023;
+  --per-pantaloneta: #f4f4f4;
+  --per-medias: #f4f4f4;
+  --per-visita: #d91023;
+  --per-visita-detalle: #f4f4f4;
+  --per-acento: #d91023;   /* filetes de los costados (rojo) */
+  /* Chile: roja, pantaloneta azul */
+  --chi-camiseta: #d52b1e;
+  --chi-detalle: #f4f4f4;
+  --chi-pantaloneta: #0039a6;
+  --chi-medias: #f4f4f4;
+  --chi-visita: #f4f4f4;
+  --chi-visita-detalle: #d52b1e;
+  --chi-acento: #0039a6;   /* filetes de los costados (azul) */
+  /* Ecuador: amarilla, pantaloneta azul y medias rojas */
+  --ecu-camiseta: #ffdd00;
+  --ecu-detalle: #034ea2;
+  --ecu-pantaloneta: #034ea2;
+  --ecu-medias: #ed1c24;
+  --ecu-visita: #034ea2;
+  --ecu-visita-detalle: #ffdd00;
+  --ecu-acento: #ed1c24;   /* filetes de los costados (rojo) */
+  /* España: roja con amarillo, pantaloneta azul */
+  --esp-camiseta: #c60b1e;
+  --esp-detalle: #ffc400;
+  --esp-pantaloneta: #1b2a6b;
+  --esp-medias: #111111;
+  --esp-visita: #f2f2f2;
+  --esp-visita-detalle: #c60b1e;
+  --esp-acento: #1b2a6b;   /* filetes de los costados (azul oscuro) */
+  /* Francia: azul, pantaloneta blanca, medias rojas */
+  --fra-camiseta: #1f3a8a;
+  --fra-detalle: #f4f4f4;
+  --fra-pantaloneta: #f4f4f4;
+  --fra-medias: #e1000f;
+  --fra-visita: #f4f4f4;
+  --fra-visita-detalle: #1f3a8a;
+  --fra-acento: #e1000f;   /* filetes de los costados (rojo) */
+  /* Alemania: blanca, pantaloneta negra */
+  --ale-camiseta: #f4f4f4;
+  --ale-detalle: #111111;
+  --ale-pantaloneta: #111111;
+  --ale-medias: #f4f4f4;
+  --ale-visita: #24242b;
+  --ale-visita-detalle: #e30613;
+  --ale-acento: #ffce00;   /* filetes de los costados (dorado) */
+  /* Italia: azul, pantaloneta blanca */
+  --ita-camiseta: #1f5fbf;
+  --ita-detalle: #f4f4f4;
+  --ita-pantaloneta: #f4f4f4;
+  --ita-medias: #1f5fbf;
+  --ita-visita: #f4f4f4;
+  --ita-visita-detalle: #1f5fbf;
+  --ita-acento: #009246;   /* filetes de los costados (verde) */
+  /* Portugal: roja, pantaloneta verde */
+  --por-camiseta: #b5121b;
+  --por-detalle: #046a38;
+  --por-pantaloneta: #046a38;
+  --por-medias: #b5121b;
+  --por-visita: #f4f4f4;
+  --por-visita-detalle: #b5121b;
+  --por-acento: #e6b422;   /* filetes de los costados (dorado) */
+  /* Holanda: naranja, pantaloneta blanca */
+  --hol-camiseta: #ff6c00;
+  --hol-detalle: #111111;
+  --hol-pantaloneta: #f4f4f4;
+  --hol-medias: #ff6c00;
+  --hol-visita: #1b2a6b;
+  --hol-visita-detalle: #ff6c00;
+  --hol-acento: #f4f4f4;   /* filetes de los costados (blanco) */
+  /* Inglaterra: blanca, pantaloneta azul oscuro */
+  --ing-camiseta: #f4f4f4;
+  --ing-detalle: #1b2a4a;
+  --ing-pantaloneta: #1b2a4a;
+  --ing-medias: #f4f4f4;
+  --ing-visita: #cf081f;
+  --ing-visita-detalle: #f4f4f4;
+  --ing-acento: #cf081f;   /* filetes de los costados (rojo) */
+  /* Japón: azul oscuro, pantaloneta blanca */
+  --jap-camiseta: #0d2c7a;
+  --jap-detalle: #f4f4f4;
+  --jap-pantaloneta: #f4f4f4;
+  --jap-medias: #0d2c7a;
+  --jap-visita: #f4f4f4;
+  --jap-visita-detalle: #0d2c7a;
+  --jap-acento: #e30613;   /* filetes de los costados (rojo) */
+
+  /* Cancha: césped verde limón y pista color ladrillo, como en los juegos clásicos */
+  --cesped-claro: #6cbf3a;
+  --cesped-oscuro: #5fb033;
+  --pista: #8a3a26;
+  --pista-borde: #6e2c1c;
+  --cal: #f6f7f0;
+  --red: rgba(255, 255, 255, 0.6);
+  --red-capa: rgba(255, 255, 255, 0.14);
+  --poste-borde: #4a5650;
+
+  /* Franja del marcador (ladrillo): el texto blanco tiene contraste 8.8:1 */
+  --ladrillo: #7d3324;
+  --ladrillo-oscuro: #5a2218;
+  --ladrillo-velo: rgba(110, 42, 28, 0.9);   /* cápsula del marcador flotante (celular acostado) */
+
+  /* Botones de juego sobre la cancha (oscuros y bastante transparentes, como en DLS) */
+  --mando-fondo: rgba(8, 18, 13, 0.5);
+
+  /* Graderías, vallas publicitarias y reflectores */
+  --graderia: #1f2b33;
+  --graderia-escalon: #283843;
+  --escalera: #3a4a55;
+  --valla: #0e1d27;
+  --valla-texto: #ffd23f;
+  --torre: #2a3540;
+  --bombillo: #fff6d0;
+  --destello: #ffffff;
+
+  /* Personas (afición y jugadores) */
+  --piel-1: #f1c7a0;
+  --piel-2: #c98e62;
+  --piel-3: #8a5a3c;
+  --pelo: #2b1d14;
+
+  /* Balón */
+  --balon: #ffffff;
+  --balon-parche: #1c1c1c;
+
+  /* Poderes: cada uno con su color */
+  --poder-mini: #a3ff4f;
+  --poder-turbo: #ff8a1f;
+  --poder-multi: #b98bff;
+  --poder-gigante: #ffc531;
+  --poder-escudo: #dfe7ff;
+  --poder-hielo: #6fe2ff;
+  --poder-zigzag: #ff5f6d;
+  --hielo-capa: rgba(170, 235, 255, 0.6);
+
+  /* Figura de cada selección, cansancio y tarjetas */
+  --estrella: #ffcf33;
+  --sudor: #8fe3ff;
+  --energia-alta: #5fe08a;
+  --energia-media: #ffd23f;
+  --energia-baja: #ff6b5b;
+  --tarjeta-amarilla: #ffd400;
+  --tarjeta-roja: #e8202c;
+
+  /* Medallas del mini torneo (oro para el campeón, plata para el finalista) */
+  --medalla-oro: #ffc93c;
+  --medalla-oro-borde: #b07d00;
+  --medalla-plata: #d9dee6;
+  --medalla-plata-borde: #7d8794;
+  --cinta-1: #ff3d9a;
+  --cinta-2: #36c5ff;
+
+  /* Fuentes */
+  --fuente-titulo: "Bungee", "Impact", "Arial Black", sans-serif;
+  --fuente-texto: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Medidas */
+  --radio: 14px;
+  --margen-lateral: 16px;
+
+  background-color: var(--noche);
+}
+
+
+/* ---- Camiseta dibujada (selector de equipos y palcos del marcador) ----
+   Como una camiseta de fútbol: cuello en "V", puños, filetes a los costados
+   y un escudo pequeño en el pecho (genérico, sin logos reales). */
+.camiseta {
+  --kit-camiseta: var(--tinta-suave);
+  --kit-detalle: var(--noche);
+  --kit-acento: var(--noche);
+  display: block;
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+.camiseta__cuerpo {
+  fill: var(--kit-camiseta);
+  stroke: var(--tinta-suave);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+}
+
+.camiseta__cuello,
+.camiseta__punos,
+.camiseta__escudo {
+  fill: var(--kit-detalle);
+}
+
+.camiseta__costados {
+  fill: var(--kit-acento);
+}
+
+/* Rayas (Argentina) y banda (Perú): solo se ven si la selección las tiene */
+.camiseta__rayas,
+.camiseta__banda {
+  display: none;
+  fill: var(--kit-detalle);
+}
+
+.camiseta[data-patron="rayas"] .camiseta__rayas,
+.camiseta[data-patron="banda"] .camiseta__banda {
+  display: inline;
+}
+
+/* Cada camiseta dibujada en la página toma los colores de su selección.
+   script.js solo pone data-kit="COL" (y data-visita="si" si usa la de visitante). */
+[data-kit="COL"] { --kit-camiseta: var(--col-camiseta); --kit-detalle: var(--col-detalle); --kit-acento: var(--col-acento); }
+[data-kit="COL"][data-visita="si"] { --kit-camiseta: var(--col-visita); --kit-detalle: var(--col-visita-detalle); }
+[data-kit="BRA"] { --kit-camiseta: var(--bra-camiseta); --kit-detalle: var(--bra-detalle); --kit-acento: var(--bra-acento); }
+[data-kit="BRA"][data-visita="si"] { --kit-camiseta: var(--bra-visita); --kit-detalle: var(--bra-visita-detalle); }
+[data-kit="ARG"] { --kit-camiseta: var(--arg-camiseta); --kit-detalle: var(--arg-detalle); --kit-acento: var(--arg-acento); }
+[data-kit="ARG"][data-visita="si"] { --kit-camiseta: var(--arg-visita); --kit-detalle: var(--arg-visita-detalle); }
+[data-kit="MEX"] { --kit-camiseta: var(--mex-camiseta); --kit-detalle: var(--mex-detalle); --kit-acento: var(--mex-acento); }
+[data-kit="MEX"][data-visita="si"] { --kit-camiseta: var(--mex-visita); --kit-detalle: var(--mex-visita-detalle); }
+[data-kit="URU"] { --kit-camiseta: var(--uru-camiseta); --kit-detalle: var(--uru-detalle); --kit-acento: var(--uru-acento); }
+[data-kit="URU"][data-visita="si"] { --kit-camiseta: var(--uru-visita); --kit-detalle: var(--uru-visita-detalle); }
+[data-kit="PER"] { --kit-camiseta: var(--per-camiseta); --kit-detalle: var(--per-detalle); --kit-acento: var(--per-acento); }
+[data-kit="PER"][data-visita="si"] { --kit-camiseta: var(--per-visita); --kit-detalle: var(--per-visita-detalle); }
+[data-kit="CHI"] { --kit-camiseta: var(--chi-camiseta); --kit-detalle: var(--chi-detalle); --kit-acento: var(--chi-acento); }
+[data-kit="CHI"][data-visita="si"] { --kit-camiseta: var(--chi-visita); --kit-detalle: var(--chi-visita-detalle); }
+[data-kit="ECU"] { --kit-camiseta: var(--ecu-camiseta); --kit-detalle: var(--ecu-detalle); --kit-acento: var(--ecu-acento); }
+[data-kit="ECU"][data-visita="si"] { --kit-camiseta: var(--ecu-visita); --kit-detalle: var(--ecu-visita-detalle); }
+[data-kit="ESP"] { --kit-camiseta: var(--esp-camiseta); --kit-detalle: var(--esp-detalle); --kit-acento: var(--esp-acento); }
+[data-kit="ESP"][data-visita="si"] { --kit-camiseta: var(--esp-visita); --kit-detalle: var(--esp-visita-detalle); }
+[data-kit="FRA"] { --kit-camiseta: var(--fra-camiseta); --kit-detalle: var(--fra-detalle); --kit-acento: var(--fra-acento); }
+[data-kit="FRA"][data-visita="si"] { --kit-camiseta: var(--fra-visita); --kit-detalle: var(--fra-visita-detalle); }
+[data-kit="ALE"] { --kit-camiseta: var(--ale-camiseta); --kit-detalle: var(--ale-detalle); --kit-acento: var(--ale-acento); }
+[data-kit="ALE"][data-visita="si"] { --kit-camiseta: var(--ale-visita); --kit-detalle: var(--ale-visita-detalle); }
+[data-kit="ITA"] { --kit-camiseta: var(--ita-camiseta); --kit-detalle: var(--ita-detalle); --kit-acento: var(--ita-acento); }
+[data-kit="ITA"][data-visita="si"] { --kit-camiseta: var(--ita-visita); --kit-detalle: var(--ita-visita-detalle); }
+[data-kit="POR"] { --kit-camiseta: var(--por-camiseta); --kit-detalle: var(--por-detalle); --kit-acento: var(--por-acento); }
+[data-kit="POR"][data-visita="si"] { --kit-camiseta: var(--por-visita); --kit-detalle: var(--por-visita-detalle); }
+[data-kit="HOL"] { --kit-camiseta: var(--hol-camiseta); --kit-detalle: var(--hol-detalle); --kit-acento: var(--hol-acento); }
+[data-kit="HOL"][data-visita="si"] { --kit-camiseta: var(--hol-visita); --kit-detalle: var(--hol-visita-detalle); }
+[data-kit="ING"] { --kit-camiseta: var(--ing-camiseta); --kit-detalle: var(--ing-detalle); --kit-acento: var(--ing-acento); }
+[data-kit="ING"][data-visita="si"] { --kit-camiseta: var(--ing-visita); --kit-detalle: var(--ing-visita-detalle); }
+[data-kit="JAP"] { --kit-camiseta: var(--jap-camiseta); --kit-detalle: var(--jap-detalle); --kit-acento: var(--jap-acento); }
+[data-kit="JAP"][data-visita="si"] { --kit-camiseta: var(--jap-visita); --kit-detalle: var(--jap-visita-detalle); }
+
+
+/* =====================================================================
+   2. BASE
+   ===================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mientras se juega, la página no se desplaza */
+html.jugando,
+html.jugando body {
+  overflow: hidden;
+}
+
+/* Que el atributo hidden siempre esconda, aunque la clase diga "display: flex" */
+[hidden] {
+  display: none !important;
+}
+
+img {
+  max-width: 100%;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.35em;
+  border: 1px solid var(--borde-suave);
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-family: var(--fuente-texto);
+  font-size: 0.85em;
+  font-weight: 700;
+  text-align: center;
+}
+
+
+/* =====================================================================
+   3. UTILIDADES
+   ===================================================================== */
+
+/* Texto que no se ve pero sí leen los lectores de pantalla */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Foco visible con teclado en todo lo que se pueda enfocar */
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 3px;
+}
+
+/* Íconos SVG: heredan el color del texto */
+.icono {
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+}
+
+.icono__trazo {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icono__relleno {
+  fill: currentColor;
+}
+
+
+/* =====================================================================
+   4. BOTONES
+   Botón de máquina arcade: se hunde un poquito al presionarlo.
+   ===================================================================== */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.7rem 1.4rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-family: var(--fuente-titulo);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
+}
+
+.boton--principal {
+  background-color: var(--local);
+  color: var(--noche);
+  box-shadow: 0 5px 0 var(--local-oscuro);
+}
+
+.boton--principal:hover {
+  background-color: var(--local-claro);
+}
+
+.boton--principal:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--local-oscuro);
+}
+
+.boton--secundario {
+  border-color: var(--borde-suave);
+  background-color: var(--noche-clara);
+  color: var(--tinta);
+  box-shadow: 0 5px 0 var(--noche);
+}
+
+.boton--secundario:hover {
+  border-color: var(--local);
+}
+
+.boton--secundario:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--noche);
+}
+
+/* Botones pequeños del marcador (Menú y Sonido) */
+.boton-hud {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 2.75rem;
+  min-height: 2.5rem;
+  padding: 0.3rem 0.7rem;
+  border: 2px solid var(--tinta-suave); /* 5:1 sobre el ladrillo: el botón se distingue */
+  border-radius: 999px;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-family: var(--fuente-texto);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.boton-hud:hover {
+  border-color: var(--local);
+}
+
+/* El botón de sonido muestra un ícono distinto según esté prendido o apagado */
+.boton-hud--sonido[aria-pressed="true"] .icono--sin-sonido,
+.boton-hud--sonido[aria-pressed="false"] .icono--con-sonido {
+  display: none;
+}
+
+.boton-hud--sonido[aria-pressed="false"] {
+  color: var(--tinta-suave);
+}
+
+
+/* =====================================================================
+   5. PANTALLA DE INICIO
+   Fondo de estadio de noche: dos reflectores y el césped a franjas abajo.
+   ===================================================================== */
+.inicio {
+  position: relative;
+  isolation: isolate; /* las capas de luz y césped quedan detrás de la tarjeta */
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem var(--margen-lateral);
+  background-color: var(--noche);
+}
+
+/* Luz de los dos reflectores. El degradado usa "currentColor",
+   que toma el color de la variable --reflector */
+.inicio::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  color: var(--reflector);
+  background-image:
+    radial-gradient(60% 45% at 12% 0%, currentColor, transparent),
+    radial-gradient(60% 45% at 88% 0%, currentColor, transparent);
+  pointer-events: none;
+}
+
+/* Césped a franjas en la parte de abajo */
+.inicio::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  height: 28%;
+  color: var(--cesped-claro);
+  background-color: var(--cesped-oscuro);
+  background-image: repeating-linear-gradient(90deg, currentColor, currentColor 70px, transparent 70px, transparent 140px);
+  pointer-events: none;
+}
+
+.inicio__tarjeta {
+  width: min(100%, 32rem);
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border: 2px solid var(--borde-suave);
+  border-radius: var(--radio);
+  background-color: var(--noche-media);
+  box-shadow: 0 0 0 6px var(--noche), 0 24px 60px var(--sombra-fuerte);
+}
+
+.inicio__cabecera {
+  text-align: center;
+}
+
+/* Sello de la saga: los juegos de Petunia (PetuPong, PetuGol y los que vienen) */
+.saga {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.7rem;
+  padding: 0.2rem 0.75rem 0.2rem 0.35rem;
+  border: 1px solid var(--visitante);
+  border-radius: 999px;
+  color: var(--visitante);
+  font-family: var(--fuente-titulo);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.saga__flor {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.saga__petalo {
+  fill: var(--visitante);
+}
+
+.saga__centro {
+  fill: var(--local);
+}
+
+/* Logo tipo letrero de estadio: "Petu" blanco y "Gol" amarillo con sombra fucsia */
+.logo {
+  margin: 0;
+  font-family: var(--fuente-titulo);
+  font-size: clamp(2.6rem, 11vw, 4rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.logo__petu {
+  color: var(--tinta);
+}
+
+.logo__gol {
+  color: var(--local);
+  text-shadow: 4px 4px 0 var(--visitante);
+}
+
+.inicio__lema {
+  max-width: 26rem;
+  margin: 0.75rem auto 0;
+  color: var(--tinta-suave);
+}
+
+.inicio__lema strong {
+  color: var(--visitante);
+}
+
+
+/* =====================================================================
+   6. FORMULARIO
+   ===================================================================== */
+.formulario {
+  display: grid;
+  gap: 1rem;
+}
+
+.campo {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.campo__etiqueta {
+  font-weight: 700;
+}
+
+.campo__nota {
+  color: var(--tinta-suave);
+  font-weight: 400;
+  font-size: 0.9em;
+}
+
+.campo__entrada {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.6rem 0.9rem;
+  border: 2px solid var(--borde-suave);
+  border-radius: 10px;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-family: var(--fuente-texto);
+  font-size: 1.05rem; /* 16px o más: el celular no hace zoom al escribir */
+}
+
+.campo__entrada:hover {
+  border-color: var(--tinta-suave);
+}
+
+.campo__entrada:focus-visible {
+  border-color: var(--foco);
+  outline-offset: 2px;
+}
+
+/* Solo se pinta de rojo después de que la persona intentó enviar el formulario */
+.campo__entrada:user-invalid,
+.campo__entrada[aria-invalid="true"] {
+  border-color: var(--alerta);
+}
+
+.campo__ayuda {
+  margin: 0;
+  color: var(--tinta-suave);
+  font-size: 0.9rem;
+}
+
+.campo__error {
+  margin: 0;
+  color: var(--alerta);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* Grupos de opciones (modo y nivel): título arriba y dos fichas lado a lado.
+   La rejilla va en un div adentro del fieldset (así se ve igual en todos los
+   navegadores, también en el iPhone). */
+.opciones,
+.duelo {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.opciones__titulo {
+  margin-bottom: 0.4rem;
+  padding: 0;
+  font-weight: 700;
+}
+
+.opciones__lista {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+/* Cada opción es una etiqueta; la ficha visible es el texto que va después del radio */
+.opcion {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+/* El circulito del radio queda dentro de la ficha, a la izquierda */
+.opcion__radio {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  transform: translateY(-50%);
+  accent-color: var(--local);
+}
+
+.opcion__texto {
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0.5rem 0.8rem 0.5rem 2.6rem;
+  border: 2px solid var(--borde-suave);
+  border-radius: 10px;
+  background-color: var(--noche);
+}
+
+.opcion:hover .opcion__texto {
+  border-color: var(--tinta-suave);
+}
+
+/* La opción elegida se enciende como el tablero */
+.opcion__radio:checked + .opcion__texto {
+  border-color: var(--local);
+  background-color: var(--noche-clara);
+  color: var(--local);
+  font-weight: 700;
+}
+
+/* Foco con teclado: el anillo lo dibuja la ficha completa */
+.opcion__radio:focus-visible {
+  outline: none;
+}
+
+.opcion__radio:focus-visible + .opcion__texto {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Selecciones: tu camiseta, "VS" y la del rival, cada una con su lista */
+.duelo__equipos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.duelo__lado {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.duelo__camiseta {
+  width: 3.6rem;
+  height: 3.6rem;
+}
+
+.duelo__etiqueta {
+  color: var(--tinta-suave);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.duelo__lista {
+  cursor: pointer;
+}
+
+/* "Camiseta de visitante" (cuando las dos selecciones se parecen) */
+.duelo__nota {
+  min-height: 1.5em; /* mismo alto con o sin texto: las dos columnas quedan alineadas */
+  margin: 0;
+  line-height: 1.5;
+  color: var(--tinta-suave);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* La figura de cada selección, debajo de su camiseta */
+.duelo__figura {
+  margin: 0;
+  color: var(--estrella);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.duelo__vs {
+  align-self: center;
+  color: var(--visitante);
+  font-family: var(--fuente-titulo);
+  font-size: 1.3rem;
+}
+
+.formulario__acciones {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+/* Normal u Online: fichas más grandes, con una línea pequeña debajo */
+.opcion--grande .opcion__texto {
+  flex-wrap: wrap;
+  align-content: center;
+  column-gap: 0.4rem;
+  line-height: 1.2;
+}
+
+.opcion__detalle {
+  flex-basis: 100%;
+  color: var(--tinta-suave);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.opcion__radio:checked + .opcion__texto .opcion__detalle {
+  color: var(--tinta);
+}
+
+/* En online solo se elige tu selección (el rival elige la suya en su aparato) */
+.duelo--solo .duelo__equipos {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.duelo--solo .duelo__vs,
+.duelo--solo .duelo__lado:last-child {
+  display: none;
+}
+
+/* Código de la sala: letras grandes y separadas, como en un tablero */
+.campo__entrada--codigo {
+  font-family: var(--fuente-titulo);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+/* Online: Crear sala y Unirme arriba; Atuendo y Cómo jugar abajo */
+.formulario--online .formulario__acciones {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Aviso cuando algo falla en online (sin internet, sala que no existe...) */
+.aviso-online {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid var(--alerta);
+  border-radius: 10px;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+
+/* =====================================================================
+   7. RÉCORDS
+   ===================================================================== */
+.records {
+  padding-top: 1rem;
+  border-top: 2px dashed var(--borde-suave);
+}
+
+.records__titulo {
+  margin: 0 0 0.5rem;
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+/* Aviso de que los récords no se guardan */
+.records__nota {
+  margin: -0.25rem 0 0.5rem;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+
+.records__lista {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.records__fila {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  font-size: 0.95rem;
+}
+
+.records__fila dt {
+  color: var(--tinta-suave);
+}
+
+.records__fila dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =====================================================================
+   8. PANTALLA DE JUEGO Y MARCADOR
+   Ocupa toda la pantalla: marcador arriba y el estadio con el resto.
+   ===================================================================== */
+.juego {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background-color: var(--noche);
+  touch-action: none; /* ni scroll ni zoom con los dedos mientras juegas */
+}
+
+/* Franja color ladrillo con el contenido en el centro (máximo 60rem), como en la TV.
+   Cada equipo: palco | sigla y nombre | goles (el visitante, al revés). */
+.marcador {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem max(0.6rem, calc((100% - 60rem) / 2));
+  border-bottom: 4px solid var(--ladrillo-oscuro);
+  background-color: var(--ladrillo);
+  color: var(--tinta);
+}
+
+.equipo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "palco nombre goles"
+    "palco poderes goles";
+  align-items: center;
+  column-gap: 0.6rem;
+  min-width: 0;
+}
+
+.equipo--visitante {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "goles nombre palco"
+    "goles poderes palco";
+  text-align: right;
+}
+
+/* Palco: escudo del equipo; cuando anota, la imagen de festejo o de burla.
+   La imagen se ve COMPLETA (object-fit: contain, sin recortes). */
+.palco {
+  grid-area: palco;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 4.6rem;
+  height: 3.3rem;
+  padding: 3px;
+  border: 2px solid var(--ladrillo-oscuro);
+  border-radius: 8px;
+  background-color: var(--ladrillo-oscuro);
+}
+
+/* En el palco se ve la camiseta de la selección de ese lado */
+.palco__escudo {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+/* La imagen ocupa exactamente la caja del palco (menos el relleno) y se ajusta
+   adentro sin recortarse, sea cuadrada (festejo) o ancha (burla) */
+.palco__imagen {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  display: block;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  object-fit: contain;
+}
+
+/* Mientras se ve la imagen, el escudo se esconde y el palco se ilumina */
+.palco--activo .palco__escudo {
+  display: none;
+}
+
+.equipo--local .palco--activo {
+  border-color: var(--local);
+  background-color: var(--noche);
+  animation: palco-entra 0.5s ease;
+}
+
+.equipo--visitante .palco--activo {
+  border-color: var(--visitante);
+  background-color: var(--noche);
+  animation: palco-entra 0.5s ease;
+}
+
+.palco--burla .palco__imagen {
+  animation: risa 0.32s ease-in-out infinite alternate;
+}
+
+@keyframes palco-entra {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.equipo__nombre {
+  grid-area: nombre;
+  margin: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sigla de tres letras, como "FRA" en los juegos clásicos (en blanco por contraste) */
+.equipo__sigla {
+  font-family: var(--fuente-titulo);
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+}
+
+.equipo__completo {
+  font-size: 0.85rem;
+}
+
+.equipo__goles {
+  grid-area: goles;
+  min-width: 1.4ch;
+  margin: 0;
+  padding: 0.05rem 0.45rem;
+  border: 2px solid var(--ladrillo-oscuro);
+  border-radius: 8px;
+  background-color: var(--noche);
+  font-family: var(--fuente-titulo);
+  font-size: 2.1rem;
+  line-height: 1.1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.equipo--local .equipo__goles {
+  color: var(--local);
+}
+
+.equipo--visitante .equipo__goles {
+  color: var(--visitante);
+}
+
+/* Salto del número cuando alguien hace gol */
+.equipo__goles--salta {
+  animation: salto-gol 0.6s ease;
+}
+
+@keyframes salto-gol {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.45) rotate(-6deg); }
+  70% { transform: scale(0.95) rotate(3deg); }
+  100% { transform: scale(1); }
+}
+
+/* Fichas de poderes activos (alto reservado para que el marcador no cambie de tamaño) */
+.equipo__poderes {
+  grid-area: poderes;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-height: 1.5rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.equipo--visitante .equipo__poderes {
+  justify-content: flex-end;
+}
+
+.marcador__centro {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+}
+
+.marcador__info {
+  margin: 0;
+  color: var(--tinta);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Reloj del partido, como en un tablero de estadio */
+.marcador__reloj {
+  margin: 0;
+  padding: 0 0.55rem;
+  border-radius: 8px;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-size: 1.3rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Últimos 10 segundos y muerte súbita: el reloj se pone rojo */
+.marcador__reloj--urgente {
+  color: var(--alerta);
+}
+
+.marcador__botones {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* Online, visitante: ve la cancha dada vuelta, así que su equipo (el visitante)
+   va a la izquierda del marcador y el local a la derecha */
+.juego--girado .equipo--local {
+  order: 3;
+  grid-template-areas:
+    "goles nombre palco"
+    "goles poderes palco";
+  text-align: right;
+}
+
+.juego--girado .marcador__centro {
+  order: 2;
+}
+
+.juego--girado .equipo--visitante {
+  order: 1;
+  grid-template-areas:
+    "palco nombre goles"
+    "palco poderes goles";
+  text-align: left;
+}
+
+.juego--girado .equipo--local .equipo__poderes {
+  justify-content: flex-end;
+}
+
+.juego--girado .equipo--visitante .equipo__poderes {
+  justify-content: flex-start;
+}
+
+
+/* =====================================================================
+   9. ESTADIO, AVISOS Y FICHAS
+   ===================================================================== */
+.estadio {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none; /* el dedo mueve al arquero, no la página */
+}
+
+/* Viñeta de cámara de TV: los bordes un poquito más oscuros para que el centro
+   resalte. La pinta el navegador encima del canvas (no cuesta en cada cuadro)
+   y deja pasar los toques. El degradado usa "currentColor" (toma --vineta). */
+.estadio::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  color: var(--vineta);
+  background-image: radial-gradient(ellipse at center, transparent 55%, currentColor 100%);
+  pointer-events: none;
+}
+
+.estadio__lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.estadio__lienzo:focus-visible {
+  outline-offset: -4px;
+}
+
+/* Cartel grande en el centro: ¡Comienza!, ¡GOOOL!, Muerte súbita */
+.cartel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  margin: 0;
+  padding: 0.2em 0.6em;
+  border: 4px solid currentColor;
+  border-radius: 16px;
+  background-color: var(--velo);
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(2rem, 9vmin, 4.5rem);
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.cartel--visible {
+  animation: cartel-entra 1.7s ease forwards;
+}
+
+@keyframes cartel-entra {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-6deg); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(2deg); }
+  25% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+/* Quién hizo el gol, en letra pequeña debajo de ¡GOOOL! */
+.cartel__autor {
+  display: block;
+  margin-top: 0.15em;
+  color: var(--tinta);
+  font-size: 0.34em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cartel--inicio { color: var(--foco); }
+.cartel--gol-local { color: var(--local); }
+.cartel--gol-visitante { color: var(--visitante); }
+.cartel--muerte { color: var(--alerta); }
+.cartel--medio { color: var(--local-claro); }
+
+/* Tarjetas: el cartel lleva una tarjeta dibujada a la izquierda, como la que levanta el árbitro */
+.cartel--amarilla { color: var(--tarjeta-amarilla); }
+.cartel--roja { color: var(--tarjeta-roja); }
+
+.cartel--amarilla::before,
+.cartel--roja::before {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.7em;
+  margin-right: 0.3em;
+  border: 2px solid var(--tinta);
+  border-radius: 4px;
+  background-color: currentColor;
+  vertical-align: -0.05em;
+  transform: rotate(-10deg);
+}
+
+/* Aviso que aparece arriba de la cancha (poderes, saques, balón trabado) */
+.aviso {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: calc(100% - 1rem);
+  margin: 0;
+  padding: 0.35rem 0.9rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  background-color: var(--noche);
+  color: var(--tinta);
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transform: translateX(-50%);
+  box-shadow: 0 6px 18px var(--sombra-fuerte);
+}
+
+.aviso--visible {
+  animation: aviso-entra 2.1s ease forwards;
+}
+
+@keyframes aviso-entra {
+  0% { opacity: 0; transform: translate(-50%, -10px) scale(0.9); }
+  10% { opacity: 1; transform: translate(-50%, 0) scale(1.06); }
+  18% { transform: translate(-50%, 0) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Color de cada aviso */
+.aviso--mini { color: var(--poder-mini); }
+.aviso--turbo { color: var(--poder-turbo); }
+.aviso--multi { color: var(--poder-multi); }
+.aviso--gigante { color: var(--poder-gigante); }
+.aviso--escudo { color: var(--poder-escudo); }
+.aviso--hielo { color: var(--poder-hielo); }
+.aviso--zigzag { color: var(--poder-zigzag); }
+.aviso--alerta { color: var(--alerta); }
+.aviso--ayuda { color: var(--foco); }
+.aviso--cambio { color: var(--energia-alta); }
+
+/* Consejo de controles: debajo del aviso, con las teclas dibujadas */
+.consejo {
+  position: absolute;
+  top: 3.2rem;
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - 1rem);
+  margin: 0;
+  padding: 0.4rem 1rem;
+  border: 2px solid var(--local);
+  border-radius: 14px;
+  background-color: var(--velo);
+  color: var(--tinta);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+  box-shadow: 0 6px 18px var(--sombra-fuerte);
+}
+
+.consejo--visible {
+  animation: aviso-entra 4.5s ease forwards;
+}
+
+/* Celular de pie: el consejo va a la izquierda para no tapar el radar */
+.estadio--vertical .consejo {
+  left: 0.5rem;
+  max-width: calc(100% - 7rem);
+  font-size: 0.85rem;
+  text-align: left;
+  transform: none;
+}
+
+.estadio--vertical .consejo--visible {
+  animation-name: consejo-entra-lado;
+}
+
+@keyframes consejo-entra-lado {
+  0% { opacity: 0; transform: translateY(-10px) scale(0.9); }
+  10% { opacity: 1; transform: translateY(0) scale(1.04); }
+  18% { transform: translateY(0) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.consejo kbd,
+.consejo strong {
+  margin: 0 0.15rem;
+  color: var(--local);
+}
+
+/* Durante la repetición no se ven los botones (tocar la cancha la salta) */
+.juego--repeticion .mando__grupo {
+  visibility: hidden;
+}
+
+/* Letrero "Repetición" (arriba a la izquierda, como en la TV) */
+.repeticion {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  background-color: var(--velo);
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.repeticion__punto {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background-color: var(--alerta);
+  animation: parpadeo 1s steps(2, start) infinite;
+}
+
+.repeticion__saltar {
+  font-family: var(--fuente-texto);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@keyframes parpadeo {
+  to { visibility: hidden; }
+}
+
+/* Saque de banda, tiro de esquina y saque de meta: letrero color ladrillo
+   en mayúsculas, como el "THROW IN" de los juegos clásicos */
+.aviso--jugada {
+  border-color: var(--tinta);
+  background-color: var(--ladrillo);
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Fichas redondas con el ícono del poder y una barrita que se vacía */
+.chip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  overflow: hidden;
+  border-radius: 50%;
+  color: var(--noche);
+  font-size: 0.85rem;
+}
+
+.chip .icono {
+  width: 1rem;
+  height: 1rem;
+}
+
+.chip__tiempo {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--noche);
+  transform-origin: left center;
+  animation: vaciar 8s linear forwards;
+}
+
+@keyframes vaciar {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Mientras está en pausa, las barritas no avanzan */
+.juego--pausa .chip__tiempo {
+  animation-play-state: paused;
+}
+
+.chip--mini { background-color: var(--poder-mini); }
+.chip--turbo { background-color: var(--poder-turbo); }
+.chip--multi { background-color: var(--poder-multi); }
+.chip--gigante { background-color: var(--poder-gigante); }
+.chip--escudo { background-color: var(--poder-escudo); }
+.chip--hielo { background-color: var(--poder-hielo); }
+.chip--zigzag { background-color: var(--poder-zigzag); }
+
+/* Duración de cada poder (igual que en script.js) */
+.chip--mini .chip__tiempo { animation-duration: 8s; }
+.chip--turbo .chip__tiempo { animation-duration: 7s; }
+.chip--multi .chip__tiempo { animation-duration: 8s; }
+.chip--gigante .chip__tiempo { animation-duration: 8s; }
+.chip--escudo .chip__tiempo { animation-duration: 14s; }
+.chip--hielo .chip__tiempo { animation-duration: 1.8s; }
+.chip--zigzag .chip__tiempo { animation-duration: 7s; }
+
+/* ---- Botones de juego, como en los juegos de fútbol del celular ----
+   La capa cubre el estadio pero deja pasar los toques (pointer-events: none),
+   así el dedo que cae fuera de un botón mueve el joystick. */
+.mando {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3; /* encima de los avisos: los botones siempre se pueden tocar */
+  pointer-events: none;
+}
+
+/* "Gira tu celular": tapa la cancha mientras el celular esté de pie
+   (el partido espera quieto hasta que lo acuesten) */
+.girar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 6;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 2rem;
+  background-color: var(--noche);
+  color: var(--tinta);
+  text-align: center;
+}
+
+.girar__icono {
+  width: 6rem;
+  height: 6rem;
+  animation: girar-celular 2.4s ease-in-out infinite;
+}
+
+.girar__celular {
+  fill: none;
+  stroke: var(--local);
+  stroke-width: 3;
+}
+
+.girar__flecha {
+  fill: none;
+  stroke: var(--tinta);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.girar__texto {
+  margin: 0;
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: 1.6rem;
+}
+
+.girar__nota {
+  max-width: 18rem;
+  margin: 0;
+  color: var(--tinta-suave);
+}
+
+@keyframes girar-celular {
+  0%, 20% { transform: rotate(0deg); }
+  50%, 80% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Tres botones, como en Dream League Soccer. En el computador van en fila
+   como las teclas (Z pase, X centro, Espacio tiro). */
+.mando__grupo {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  grid-template-areas: "pase centro tiro";
+  align-items: end;
+  justify-items: center;
+  gap: 0.4rem 0.5rem;
+  pointer-events: auto;
+}
+
+.boton-mando {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  border: 2px solid var(--local);
+  border-radius: 50%;
+  background-color: var(--mando-fondo);
+  box-shadow: 0 3px 10px var(--sombra);
+  color: var(--tinta);
+  font-family: var(--fuente-texto);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.1;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s ease, background-color 0.08s ease;
+}
+
+.boton-mando--pase { grid-area: pase; }
+.boton-mando--centro { grid-area: centro; }
+
+.boton-mando--tiro {
+  grid-area: tiro;
+  width: 4rem;
+  height: 4rem;
+  font-size: 0.75rem;
+}
+
+.boton-mando__icono {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.boton-mando--tiro .boton-mando__icono {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Sin el balón, cada botón cambia de ícono (y de nombre, desde script.js) */
+.boton-mando__icono--defensa {
+  display: none;
+}
+
+.mando__grupo--defensa .boton-mando__icono--defensa {
+  display: block;
+}
+
+.mando__grupo--defensa .boton-mando__icono--ataque {
+  display: none;
+}
+
+/* Tecla de cada acción (solo en el computador), centrada arriba del botón */
+.boton-mando__tecla {
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  min-width: 1.5rem;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0 0.3rem;
+  border-color: var(--tinta-suave);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+/* Presionado (con el dedo o con la tecla): se llena del color del equipo */
+.boton-mando--activo {
+  background-color: var(--local);
+  color: var(--noche);
+  transform: scale(0.92);
+}
+
+/* Online: si eres el visitante, tus botones van con el color de tu equipo */
+.mando--visitante .mando__grupo--j1 .boton-mando {
+  border-color: var(--visitante);
+}
+
+.mando--visitante .mando__grupo--j1 .boton-mando--activo {
+  background-color: var(--visitante);
+}
+
+/* Mientras cargas el tiro, el botón late */
+.boton-mando--cargando {
+  animation: carga-tiro 0.25s ease-in-out infinite alternate;
+}
+
+@keyframes carga-tiro {
+  from { transform: scale(0.92); }
+  to { transform: scale(1.04); }
+}
+
+/* En el celular, como en Dream League Soccer: Tiro grande abajo a la derecha,
+   Pase a su izquierda y Centro arriba. Botones grandes y sin las teclas. */
+.mando--tactil .mando__grupo {
+  grid-template-columns: repeat(2, auto);
+  grid-template-areas:
+    ".    centro"
+    "pase tiro";
+}
+
+.mando--tactil .boton-mando {
+  width: 4rem;
+  height: 4rem;
+  font-size: 0.75rem;
+}
+
+.mando--tactil .boton-mando--tiro {
+  width: 5.1rem;
+  height: 5.1rem;
+  font-size: 0.85rem;
+}
+
+.mando--tactil .boton-mando__icono {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.mando--tactil .boton-mando--tiro .boton-mando__icono {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+.mando--tactil .boton-mando__tecla {
+  display: none;
+}
+
+
+
+
+/* =====================================================================
+   10. DIÁLOGOS
+   Se usa <dialog> nativo: atrapa el foco, se cierra con Esc y
+   devuelve el foco al botón que lo abrió.
+   ===================================================================== */
+.dialogo {
+  width: min(100% - 2rem, 30rem);
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  padding: 1.5rem;
+  border: 2px solid var(--local);
+  border-radius: var(--radio);
+  background-color: var(--noche-media);
+  color: var(--tinta);
+  box-shadow: 0 0 0 6px var(--noche), 0 30px 70px var(--sombra-fuerte);
+}
+
+.dialogo::backdrop {
+  background-color: var(--velo);
+}
+
+.dialogo__titulo {
+  margin: 0 0 0.5rem;
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.dialogo__texto {
+  margin: 0 0 1rem;
+  color: var(--tinta-suave);
+}
+
+.dialogo__botones {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* ---- Atuendo: un muñeco de muestra por equipo con sus opciones ---- */
+.dialogo--atuendo {
+  width: min(100% - 2rem, 44rem);
+}
+
+.atuendo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.atuendo__lado {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 2px solid var(--borde-suave);
+  border-radius: 14px;
+  background-color: var(--noche);
+}
+
+.atuendo__titulo {
+  margin: 0;
+  color: var(--local);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.atuendo__lado:nth-child(2) .atuendo__titulo {
+  color: var(--visitante);
+}
+
+/* Lienzo del muñeco (el tamaño lo pone el CSS; el JavaScript solo ajusta la nitidez) */
+.atuendo__muneco {
+  display: block;
+  width: 8.5rem;
+  height: 10.5rem;
+  border-radius: 12px;
+  background-color: var(--noche-clara);
+}
+
+.atuendo__grupo {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.atuendo__leyenda {
+  margin-bottom: 0.3rem;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.atuendo__opciones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.opcion--chica .opcion__texto {
+  min-height: 2.4rem;
+  padding: 0.3rem 0.5rem 0.3rem 2.3rem;
+  font-size: 0.9rem;
+}
+
+.opcion--chica .opcion__radio {
+  left: 0.7rem;
+}
+
+/* Botines: una bolita de color por opción, con su nombre debajo */
+.atuendo__botines {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.botin {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  width: 3.2rem;
+  cursor: pointer;
+}
+
+/* El radio cubre toda la opción y es invisible: se ve la bolita, se puede usar con teclado */
+.botin__radio {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.botin__muestra {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--borde-suave);
+  border-radius: 50%;
+  box-shadow: inset 0 -5px 0 var(--sombra);
+}
+
+.botin__muestra--negro { background-color: var(--botin-negro); }
+.botin__muestra--blanco { background-color: var(--botin-blanco); }
+.botin__muestra--dorado { background-color: var(--botin-dorado); }
+.botin__muestra--fucsia { background-color: var(--botin-fucsia); }
+.botin__muestra--celeste { background-color: var(--botin-celeste); }
+
+.botin__radio:checked + .botin__muestra {
+  border-color: var(--local);
+  box-shadow: inset 0 -5px 0 var(--sombra), 0 0 0 3px var(--noche), 0 0 0 5px var(--local);
+}
+
+.botin__radio:focus-visible + .botin__muestra {
+  outline: 3px solid var(--foco);
+  outline-offset: 4px;
+}
+
+.botin__texto {
+  color: var(--tinta-suave);
+  font-size: 0.72rem;
+}
+
+.botin__radio:checked ~ .botin__texto {
+  color: var(--local);
+  font-weight: 700;
+}
+
+.atuendo__nota {
+  min-height: 1.4em;
+  margin: 0.75rem 0 0;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---- Cómo jugar ---- */
+.dialogo--ayuda {
+  width: min(100% - 2rem, 40rem);
+}
+
+/* Título con botón de cerrar a la derecha */
+.dialogo__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.boton-cerrar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 2px solid var(--borde-suave);
+  border-radius: 50%;
+  background-color: var(--noche);
+  color: var(--tinta);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.boton-cerrar:hover {
+  border-color: var(--local);
+}
+
+.ayuda {
+  display: grid;
+  gap: 1rem;
+}
+
+.ayuda__bloque p {
+  margin: 0 0 0.5rem;
+}
+
+.ayuda__titulo {
+  margin: 0 0 0.35rem;
+  color: var(--visitante);
+  font-size: 1.05rem;
+}
+
+.ayuda__lista {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+/* Tabla de controles: tecla, botón del celular, con el balón y sin el balón */
+.ayuda__tabla {
+  width: 100%;
+  margin: 0.5rem 0 0.75rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.ayuda__tabla th,
+.ayuda__tabla td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--borde-suave);
+  text-align: left;
+  vertical-align: top;
+}
+
+.ayuda__tabla thead th {
+  color: var(--local);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.ayuda__tabla tbody th {
+  white-space: nowrap;
+}
+
+.ayuda__poderes {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.poder {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.poder__icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  color: var(--noche);
+}
+
+.poder--mini .poder__icono { background-color: var(--poder-mini); }
+.poder--turbo .poder__icono { background-color: var(--poder-turbo); }
+.poder--multi .poder__icono { background-color: var(--poder-multi); }
+.poder--gigante .poder__icono { background-color: var(--poder-gigante); }
+.poder--escudo .poder__icono { background-color: var(--poder-escudo); }
+.poder--hielo .poder__icono { background-color: var(--poder-hielo); }
+.poder--zigzag .poder__icono { background-color: var(--poder-zigzag); }
+
+/* ---- Pantalla final ---- */
+.dialogo--final {
+  width: min(100% - 2rem, 56rem);
+}
+
+.final {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.final__figura {
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+
+/* En un empate no hay imagen: el texto ocupa todo el ancho */
+.final--sin-imagen {
+  grid-template-columns: 1fr;
+}
+
+/* La imagen se muestra COMPLETA: nunca se recorta (sin object-fit: cover ni esquinas redondeadas) */
+.final__imagen {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(58vh, 26rem);
+  border: 5px solid var(--local);
+  background-color: var(--noche);
+}
+
+/* Cuando gana Petunia el marco es fucsia y la imagen "se ríe" moviéndose */
+.dialogo--burla {
+  border-color: var(--visitante);
+}
+
+.dialogo--burla .dialogo__titulo {
+  color: var(--visitante);
+}
+
+.dialogo--burla .final__imagen {
+  border-color: var(--visitante);
+  animation: risa 0.32s ease-in-out infinite alternate;
+}
+
+@keyframes risa {
+  from { transform: rotate(-2.5deg) scale(1); }
+  to { transform: rotate(2.5deg) scale(1.03); }
+}
+
+.final__marcador {
+  margin: 0 0 0.5rem;
+  font-family: var(--fuente-titulo);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.final__tabla {
+  width: 100%;
+  margin: 0 0 0.9rem;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.final__tabla th,
+.final__tabla td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--borde-suave);
+  text-align: center;
+}
+
+.final__tabla thead th {
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+
+.final__tabla tbody th {
+  color: var(--tinta-suave);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.final__tabla td {
+  font-family: var(--fuente-titulo);
+  font-size: 1.1rem;
+}
+
+.final__logros {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.final__logros:empty {
+  display: none;
+}
+
+.final__logro--nuevo {
+  color: var(--local);
+  font-weight: 700;
+}
+
+
+/* =====================================================================
+   11. ONLINE: SALA, MINI TORNEO Y AVISOS DEL PARTIDO
+   ===================================================================== */
+
+/* La sala usa el mismo fondo de estadio del inicio. En el celular de pie todo
+   va en una sola columna (las columnas "desaparecen" con display: contents) y
+   los botones Cómo jugar y Salir quedan de últimos. Con pantalla ancha o el
+   celular acostado van dos columnas (ver más abajo). */
+.sala__tarjeta {
+  width: min(100%, 36rem);
+}
+
+.sala__columna {
+  display: contents;
+}
+
+.sala__acciones {
+  order: 1;
+}
+
+.sala__cabecera {
+  text-align: center;
+}
+
+.sala__titulo {
+  margin: 0;
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+/* El código, grande, para dictarlo o copiarlo */
+.sala__codigo {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--local);
+  font-size: clamp(2.2rem, 10vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: 0.18em;
+  text-shadow: 3px 3px 0 var(--visitante);
+}
+
+.sala__estado {
+  margin: 0.5rem 0 0;
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.sala__compartir {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.sala__bloque {
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 0.9rem;
+  border-top: 2px dashed var(--borde-suave);
+}
+
+.sala__subtitulo {
+  margin: 0;
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.sala__cuenta {
+  margin-left: 0.3rem;
+  color: var(--tinta-suave);
+  font-family: var(--fuente-texto);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Lista de jugadores: camiseta, nombre, selección y etiquetas */
+.sala__jugadores {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jugador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.5rem;
+  min-height: 2.6rem;
+  padding: 0.3rem 0.6rem;
+  border: 2px solid var(--borde-suave);
+  border-radius: 10px;
+  background-color: var(--noche);
+}
+
+.jugador__camiseta {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.jugador__nombre {
+  font-weight: 700;
+}
+
+.jugador__seleccion {
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+
+.etiqueta {
+  padding: 0 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.etiqueta--dueno { color: var(--local); }
+.etiqueta--tu { color: var(--foco); }
+.etiqueta--juega { color: var(--cesped-claro); }
+
+.sala__seleccion {
+  margin-top: 0.2rem;
+}
+
+/* Amistoso: los dos que juegan, uno al lado del otro */
+.sala__amistoso {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.sala__amistoso .duelo__vs {
+  padding-bottom: 0.6rem;
+}
+
+.sala__espera {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 2px dashed var(--borde-suave);
+  border-radius: 10px;
+  color: var(--tinta-suave);
+  text-align: center;
+}
+
+.sala__acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+/* Cuadro del torneo: cada ronda con sus partidos y marcadores en vivo */
+.cuadro {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cuadro__ronda {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.cuadro__titulo {
+  margin: 0;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cuadro__partidos {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partido {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.4rem 0.7rem;
+  border: 2px solid var(--borde-suave);
+  border-radius: 10px;
+  background-color: var(--noche);
+}
+
+/* El partido que se está jugando se enciende */
+.partido--jugando {
+  border-color: var(--cesped-claro);
+}
+
+.partido__fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: var(--tinta-suave);
+}
+
+.partido__fila--gano {
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.partido__fila--tu .partido__nombre {
+  text-decoration: underline;
+  text-decoration-color: var(--foco);
+  text-underline-offset: 3px;
+}
+
+.partido__nombre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partido__goles {
+  font-family: var(--fuente-titulo);
+  font-variant-numeric: tabular-nums;
+}
+
+.partido__estado {
+  color: var(--tinta-suave);
+  font-size: 0.75rem;
+}
+
+.partido--jugando .partido__estado {
+  color: var(--cesped-claro);
+  font-weight: 700;
+}
+
+/* Campeón: la imagen de festejo, completa (sin recortes) */
+.sala__campeon {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0;
+}
+
+.sala__campeon-imagen {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 12rem;
+  object-fit: contain;
+  border: 4px solid var(--local);
+  background-color: var(--noche);
+}
+
+.sala__campeon-texto {
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+/* ¡Te toca!: cuenta regresiva grande */
+.dialogo--te-toca {
+  text-align: center;
+}
+
+/* ---- Cambios: quién sale y quién entra, cada uno con su energía ---- */
+.dialogo--cambios {
+  width: min(100% - 2rem, 42rem);
+}
+
+.cambios__columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.6rem 1rem;
+}
+
+.cambios__grupo {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cambios__titulo {
+  margin-bottom: 0.35rem;
+  padding: 0;
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: 0.95rem;
+}
+
+.cambios__lista {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cambio {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.cambio__radio {
+  position: absolute;
+  top: 50%;
+  left: 0.7rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  transform: translateY(-50%);
+  accent-color: var(--local);
+}
+
+.cambio__caja {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.55rem;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.6rem 0.35rem 2.3rem;
+  border: 2px solid var(--borde-suave);
+  border-radius: 10px;
+  background-color: var(--noche);
+}
+
+.cambio__radio:checked + .cambio__caja {
+  border-color: var(--local);
+  background-color: var(--noche-clara);
+}
+
+.cambio__radio:focus-visible + .cambio__caja {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.cambio__radio:disabled + .cambio__caja {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Número en un circulito, como la plaquita de la cancha */
+.cambio__numero {
+  display: grid;
+  place-items: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 0.2rem;
+  border-radius: 999px;
+  background-color: var(--local);
+  color: var(--noche);
+  font-family: var(--fuente-titulo);
+  font-size: 0.8rem;
+}
+
+.cambio__nombre {
+  flex: 1 1 6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.cambio__nota {
+  display: block;
+  color: var(--tinta-suave);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.cambio__energia {
+  width: 4.5rem;
+  height: 0.8rem;
+}
+
+.cambio__tarjeta {
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  background-color: var(--tarjeta-amarilla);
+  color: var(--noche);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.cambios__aviso {
+  min-height: 1.3em;
+  margin: 0.5rem 0 0;
+  color: var(--local-claro);
+  font-weight: 700;
+}
+
+/* ---- Mini torneo en Normal: el próximo partido y el resultado final ---- */
+.torneo__duelo {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.torneo__resultado--burla .sala__campeon-imagen {
+  border-color: var(--visitante);
+}
+
+.torneo__resultado--burla .sala__campeon-texto {
+  color: var(--visitante);
+}
+
+/* Medalla: cinta de dos colores y un disco con estrella. El color del disco
+   sale de data-medalla ("oro" o "plata"). */
+.torneo__medalla {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0.6rem 0 0;
+  color: var(--medalla-oro);
+  font-family: var(--fuente-titulo);
+  font-size: 1.15rem;
+}
+
+.torneo__medalla[data-medalla="plata"] {
+  color: var(--medalla-plata);
+}
+
+.torneo__medalla[hidden] {
+  display: none;
+}
+
+.medalla {
+  --disco: var(--medalla-oro);
+  --disco-borde: var(--medalla-oro-borde);
+  flex: none;
+  width: 3.4rem;
+  height: 4.4rem;
+  filter: drop-shadow(0 4px 6px var(--sombra-fuerte));
+}
+
+.torneo__medalla[data-medalla="plata"] .medalla {
+  --disco: var(--medalla-plata);
+  --disco-borde: var(--medalla-plata-borde);
+}
+
+.medalla__cinta { fill: var(--cinta-1); }
+.medalla__cinta--otra { fill: var(--cinta-2); }
+
+.medalla__disco {
+  fill: var(--disco);
+  stroke: var(--disco-borde);
+  stroke-width: 3;
+}
+
+.medalla__aro {
+  fill: none;
+  stroke: var(--disco-borde);
+  stroke-width: 1.5;
+}
+
+.medalla__estrella { fill: var(--disco-borde); }
+
+/* Al aparecer, la medalla se balancea un poquito (como colgada del cuello) */
+.torneo__medalla:not([hidden]) .medalla {
+  transform-origin: 50% 0;
+  animation: medalla-cuelga 1.6s ease-out;
+}
+
+@keyframes medalla-cuelga {
+  0% { transform: translateY(-14px) rotate(-14deg); opacity: 0; }
+  30% { transform: translateY(0) rotate(10deg); opacity: 1; }
+  55% { transform: rotate(-6deg); }
+  80% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.final__medalla {
+  justify-content: flex-start;
+  margin: 0.2rem 0 0.4rem;
+}
+
+.te-toca__cuenta {
+  margin: 0.25rem 0 0;
+  color: var(--local);
+  font-family: var(--fuente-titulo);
+  font-size: 3.2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Online: "Esperando a…" encima de la cancha */
+.espera-red {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  padding: 0.8rem 1.4rem;
+  border: 3px solid var(--foco);
+  border-radius: 16px;
+  background-color: var(--velo);
+  color: var(--tinta);
+  font-family: var(--fuente-titulo);
+  font-size: clamp(1rem, 4vmin, 1.6rem);
+  text-align: center;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: espera-late 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes espera-late {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+/* Atuendo en online: solo tu equipo */
+.dialogo--solo-uno {
+  width: min(100% - 2rem, 26rem);
+}
+
+.dialogo--solo-uno .atuendo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dialogo--solo-uno .atuendo__lado:nth-child(2) {
+  display: none;
+}
+
+
+/* En el computador (pantalla ancha) la sala va en dos columnas */
+@media (min-width: 900px) and (min-height: 521px) {
+  .sala__tarjeta {
+    width: min(100%, 60rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    align-items: start;
+    gap: 1.25rem 2rem;
+  }
+}
+
+/* Con dos columnas, la segunda empieza sin la raya de arriba */
+@media (min-width: 900px) and (min-height: 521px), (max-height: 520px) and (orientation: landscape) {
+  .sala__columna {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .sala__acciones {
+    order: 0;
+  }
+
+  .sala__columna:last-child > .sala__bloque {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .sala__columna:last-child > .sala__bloque:not([hidden]) ~ .sala__bloque {
+    padding-top: 0.9rem;
+    border-top: 2px dashed var(--borde-suave);
+  }
+}
+
+
+/* =====================================================================
+   12. CELULAR Y PANTALLAS PEQUEÑAS
+   ===================================================================== */
+
+/* Celular vertical o pantallas angostas: marcador más compacto */
+@media (max-width: 560px) {
+  /* Atuendo: los dos muñecos siguen lado a lado, un poco más pequeños */
+  .atuendo {
+    gap: 0.5rem;
+  }
+
+  .atuendo__lado {
+    padding: 0.5rem;
+  }
+
+  .atuendo__muneco {
+    width: 7rem;
+    height: 8.6rem;
+  }
+
+  .inicio__tarjeta {
+    padding: 1.1rem;
+  }
+
+  /* Comenzar ocupa toda la fila; Atuendo y Cómo jugar van juntos debajo */
+  .formulario__acciones {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .formulario__acciones .boton--principal {
+    grid-column: 1 / -1;
+  }
+
+  .marcador {
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+  .dialogo__titulo {
+    font-size: 1.35rem;
+  }
+
+  /* Celular de pie: el palco a un lado y, al otro, la sigla encima de los goles;
+     las fichas de poderes van debajo */
+  .equipo {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "palco nombre"
+      "palco goles"
+      "poderes poderes";
+    column-gap: 0.35rem;
+    row-gap: 0.1rem;
+  }
+
+  .equipo--visitante {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "nombre palco"
+      "goles palco"
+      "poderes poderes";
+  }
+
+  .equipo--local .equipo__goles {
+    justify-self: start;
+  }
+
+  .equipo--visitante .equipo__goles {
+    justify-self: end;
+  }
+
+  /* Online, visitante: los lados del marcador al revés */
+  .juego--girado .equipo--local {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "nombre palco"
+      "goles palco"
+      "poderes poderes";
+  }
+
+  .juego--girado .equipo--visitante {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "palco nombre"
+      "palco goles"
+      "poderes poderes";
+  }
+
+  .juego--girado .equipo--local .equipo__goles {
+    justify-self: end;
+  }
+
+  .juego--girado .equipo--visitante .equipo__goles {
+    justify-self: start;
+  }
+
+  .sala__amistoso {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sala__amistoso .duelo__vs {
+    display: none;
+  }
+
+  .palco {
+    width: 4.4rem;
+    height: 3.2rem;
+    padding: 2px;
+  }
+
+  .palco__escudo {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .equipo__sigla {
+    font-size: 1rem;
+  }
+
+  /* Sin espacio para el nombre completo: queda solo para el lector de pantalla */
+  .equipo__completo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .equipo__goles {
+    font-size: 1.4rem;
+    padding: 0 0.35rem;
+  }
+
+  /* En celular vertical la racha se ve al final del partido; aquí se ahorra espacio */
+  .marcador__info {
+    display: none;
+  }
+
+  .marcador__reloj {
+    font-size: 1.1rem;
+  }
+
+  .marcador__centro {
+    gap: 0.2rem;
+  }
+
+  .boton-hud {
+    min-width: 2.5rem;
+    min-height: 2.25rem;
+    padding: 0.2rem 0.55rem;
+  }
+
+  .boton-hud__texto {
+    font-size: 0.8rem;
+  }
+
+  .aviso {
+    font-size: 0.85rem;
+  }
+
+  .final {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .final__imagen {
+    max-height: 34vh;
+  }
+}
+
+/* Pantallas bajitas (celular acostado): todo en una fila delgada para darle alto a la cancha */
+@media (max-height: 520px) and (orientation: landscape) {
+  /* Atuendo en el celular acostado: el muñeco a un lado y sus opciones al otro */
+  .atuendo__lado {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "titulo titulo"
+      "muneco camiseta"
+      "muneco botines";
+    justify-items: stretch;
+    column-gap: 0.6rem;
+    row-gap: 0.4rem;
+  }
+
+  .atuendo__titulo {
+    grid-area: titulo;
+  }
+
+  .atuendo__muneco {
+    grid-area: muneco;
+    width: 6rem;
+    height: 7.6rem;
+  }
+
+  .atuendo__grupo:nth-of-type(1) {
+    grid-area: camiseta;
+  }
+
+  .atuendo__grupo:nth-of-type(2) {
+    grid-area: botines;
+  }
+
+  .atuendo__botines {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 0.15rem;
+  }
+
+  .botin {
+    width: 2.6rem;
+  }
+
+  .botin__muestra {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  /* Sin espacio para el nombre del color: queda para el lector de pantalla */
+  .botin__texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .botin {
+    width: 2.4rem;
+  }
+
+  .botin__muestra {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  /* Sin la frase de arriba: así "Listo" se ve sin bajar */
+  .dialogo--atuendo .dialogo__texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .dialogo--atuendo .dialogo__botones {
+    margin-top: 0.5rem;
+  }
+
+  .atuendo__nota {
+    margin-top: 0.4rem;
+  }
+
+  .inicio {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .inicio__tarjeta {
+    width: min(100%, 50rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    align-items: start;
+    gap: 0.75rem 1.25rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .inicio__cabecera {
+    text-align: left;
+  }
+
+  .logo {
+    font-size: 2.4rem;
+  }
+
+  .inicio__lema {
+    margin-left: 0;
+  }
+
+  .formulario {
+    grid-row: span 2;
+    gap: 0.45rem;
+  }
+
+  .campo__ayuda {
+    display: none;
+  }
+
+  .campo__entrada,
+  .opcion__texto {
+    min-height: 2.4rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  /* Títulos de modo, selecciones y nivel un poco más pequeños y pegados a sus fichas */
+  .opciones__titulo {
+    margin-bottom: 0.2rem;
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+
+  /* Selecciones: la camiseta al lado de su lista (ahorra alto) */
+  .duelo__lado {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "camiseta etiqueta"
+      "camiseta lista"
+      "nota nota"
+      "figura figura";
+    justify-items: stretch;
+    column-gap: 0.4rem;
+    row-gap: 0.1rem;
+  }
+
+  .duelo__camiseta {
+    grid-area: camiseta;
+    align-self: end;
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+
+  .duelo__etiqueta {
+    grid-area: etiqueta;
+    font-size: 0.8rem;
+    text-align: left;
+  }
+
+  .duelo__lista {
+    grid-area: lista;
+  }
+
+  .duelo__nota {
+    grid-area: nota;
+    min-height: 1.1em;
+    font-size: 0.72rem;
+    line-height: 1.1;
+  }
+
+  .duelo__figura {
+    grid-area: figura;
+    font-size: 0.72rem;
+    text-align: left;
+  }
+
+  .aviso {
+    padding: 0.2rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .records {
+    padding-top: 0.6rem;
+  }
+
+  /* Marcador flotante: una cápsula color ladrillo encima de la cancha,
+     así la cancha usa todo el alto de la pantalla */
+  .juego {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .marcador {
+    position: absolute;
+    top: 0.35rem;
+    left: 50%;
+    z-index: 3;
+    grid-template-columns: auto auto auto;
+    gap: 0.5rem;
+    padding: 0.2rem 0.3rem;
+    border: 2px solid var(--ladrillo-oscuro);
+    width: max-content;
+    max-width: calc(100% - 1rem);
+    border-radius: 999px;
+    background-color: var(--ladrillo-velo);
+    box-shadow: 0 4px 14px var(--sombra-fuerte);
+    transform: translateX(-50%);
+  }
+
+  /* Palco, nombre, fichas de poderes y goles quedan en una sola fila */
+  .equipo {
+    grid-template-areas: "palco nombre poderes goles";
+    grid-template-columns: auto auto auto auto;
+    column-gap: 0.4rem;
+  }
+
+  .equipo--visitante {
+    grid-template-areas: "goles poderes nombre palco";
+    grid-template-columns: auto auto auto auto;
+  }
+
+  .juego--girado .equipo--local {
+    grid-template-areas: "goles poderes nombre palco";
+  }
+
+  .juego--girado .equipo--visitante {
+    grid-template-areas: "palco nombre poderes goles";
+  }
+
+  /* La sala en el celular acostado: un poco más compacta */
+  .sala__codigo {
+    font-size: 2rem;
+  }
+
+  .sala__columna {
+    gap: 0.6rem;
+  }
+
+  .sala__bloque {
+    gap: 0.4rem;
+    padding-top: 0.6rem;
+  }
+
+  .jugador {
+    min-height: 2.2rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .te-toca__cuenta {
+    font-size: 2.4rem;
+  }
+
+  .palco {
+    width: 3rem;
+    height: 2.1rem;
+    padding: 2px;
+    border-radius: 999px;
+    transition: width 0.25s ease, height 0.25s ease;
+  }
+
+  /* Cuando ese equipo anota, el palco crece para que la imagen se vea bien (completa) */
+  .palco--activo {
+    width: 4.8rem;
+    height: 3.3rem;
+    border-radius: 12px;
+  }
+
+  .palco__escudo {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .equipo__sigla {
+    font-size: 0.95rem;
+  }
+
+  .equipo__completo {
+    display: inline-block;
+    max-width: 5.5rem;
+    overflow: hidden;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+  }
+
+  .equipo__poderes {
+    flex-wrap: nowrap;
+    min-height: 0;
+    margin: 0;
+  }
+
+  .chip {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+
+  .equipo__goles {
+    font-size: 1.25rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+  }
+
+  .marcador__centro {
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  /* La racha se ve en la pausa y al final; aquí la cápsula queda limpia */
+  .marcador__info {
+    display: none;
+  }
+
+  .marcador__reloj {
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    font-size: 1rem;
+  }
+
+  .marcador__botones {
+    gap: 0.25rem;
+  }
+
+  .boton-hud {
+    min-width: 2.1rem;
+    min-height: 2.1rem;
+    padding: 0.1rem;
+    border-width: 1px;
+  }
+
+  /* Solo el ícono (el lector de pantalla sigue leyendo "Menú") */
+  .boton-hud__texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  /* En la repetición la cápsula se esconde (como en la TV) y queda el letrero */
+  .juego--repeticion .marcador {
+    visibility: hidden;
+  }
+
+  /* Avisos y consejos debajo de la cápsula del marcador */
+  .aviso {
+    top: 3.2rem;
+  }
+
+  .consejo {
+    top: 5.4rem;
+  }
+
+  .dialogo {
+    max-height: calc(100% - 1rem);
+    padding: 1rem;
+  }
+
+  .dialogo__botones {
+    gap: 0.5rem;
+  }
+
+  .boton {
+    min-height: 2.6rem;
+    padding: 0.45rem 1rem;
+  }
+
+  .final {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 1rem;
+  }
+
+  .final__imagen {
+    max-height: calc(100vh - 4rem);
+  }
+}
+
+/* Celular acostado: botones un poco más pequeños para que se vea más cancha */
+@media (max-height: 520px) and (orientation: landscape) {
+  .mando__grupo {
+    right: 0.5rem;
+    bottom: 0.5rem;
+    gap: 0.3rem 0.4rem;
+  }
+
+  .mando--tactil .boton-mando {
+    width: 3.4rem;
+    height: 3.4rem;
+    font-size: 0.68rem;
+  }
+
+  .mando--tactil .boton-mando--tiro {
+    width: 4.3rem;
+    height: 4.3rem;
+  }
+
+  .mando--tactil .boton-mando__icono {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .mando--tactil .boton-mando--tiro .boton-mando__icono {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+}
+
+/* Pantallas muy angostas: el texto "Menú" se esconde y queda solo el ícono (el lector lo sigue leyendo) */
+@media (max-width: 360px) {
+  .boton-hud__texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+
+/* =====================================================================
+   13. REDUCIR MOVIMIENTO
+   Si la persona lo pide en su sistema, se quitan saltos y sacudidas.
+   (El JavaScript también apaga la ola, las serpentinas y el zigzag visual.)
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+
+  .equipo__goles--salta,
+  .dialogo--burla .final__imagen,
+  .equipo--local .palco--activo,
+  .equipo--visitante .palco--activo,
+  .palco--burla .palco__imagen,
+  .boton-mando--cargando,
+  .repeticion__punto,
+  .torneo__medalla:not([hidden]) .medalla,
+  .girar__icono,
+  .espera-red {
+    animation: none;
+  }
+
+  .aviso--visible,
+  .consejo--visible,
+  .estadio--vertical .consejo--visible,
+  .cartel--visible {
+    animation: none;
+    opacity: 1;
+  }
+
+  .boton--principal:active,
+  .boton--secundario:active {
+    transform: none;
+  }
+}

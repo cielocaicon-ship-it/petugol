@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="PetuGol: futbolito arcade 6 contra 6 inspirado en el fútbol clásico de consola, con cancha inclinada y cámara que sigue el balón, contra Petunia, la máquina (un partido o un mini torneo), o en línea, con salas y mini torneos entre amigos. Con figuras de cada selección, cansancio, cambios, tarjetas y penales.">
+  <meta name="theme-color" content="#0b1712">
+  <title>PetuGol</title>
+
+  <!-- Fuentes: Bungee (letreros de estadio) y Atkinson Hyperlegible (texto muy fácil de leer).
+       Si no hay internet, el juego usa las fuentes del sistema. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Bungee&amp;display=swap">
+
+  <!-- Hoja de estilos externa (todos los colores están en :root) -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Programa del juego. "defer" espera a que el HTML esté listo antes de ejecutarlo -->
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <main id="principal">
+
+    <!-- ===================== PANTALLA DE INICIO ===================== -->
+    <section id="pantallaInicio" class="inicio" aria-labelledby="tituloJuego">
+      <div class="inicio__tarjeta">
+
+        <header class="inicio__cabecera">
+          <!-- Sello de la saga de juegos de Petunia -->
+          <p class="saga">
+            <svg class="saga__flor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle class="saga__petalo" cx="12" cy="5.5" r="4"/>
+              <circle class="saga__petalo" cx="18.2" cy="10" r="4"/>
+              <circle class="saga__petalo" cx="15.8" cy="17.3" r="4"/>
+              <circle class="saga__petalo" cx="8.2" cy="17.3" r="4"/>
+              <circle class="saga__petalo" cx="5.8" cy="10" r="4"/>
+              <circle class="saga__centro" cx="12" cy="12" r="3.4"/>
+            </svg>
+            Saga Petunia
+          </p>
+          <h1 id="tituloJuego" class="logo"><span class="logo__petu">Petu</span><span class="logo__gol">Gol</span></h1>
+          <p class="inicio__lema">Futbolito arcade 6 contra 6 frente a <strong>Petunia</strong>, la máquina que no te la pone fácil, o en línea con tus amigos.</p>
+        </header>
+
+        <!-- Formulario: usuario (obligatorio), normal u online, modo, selecciones y nivel -->
+        <form id="formInicio" class="formulario">
+          <div class="campo">
+            <label class="campo__etiqueta" for="usuario">Tu usuario <span class="campo__nota">(obligatorio)</span></label>
+            <input class="campo__entrada" id="usuario" name="usuario" type="text" required maxlength="14"
+                   pattern=".*\S.*" autocomplete="off" spellcheck="false"
+                   aria-describedby="usuarioAyuda usuarioError">
+            <p id="usuarioAyuda" class="campo__ayuda">Sale en el marcador y en los récords. No se guarda: al cerrar la página se borra.</p>
+            <p id="usuarioError" class="campo__error" role="alert" hidden>Escribe tu usuario para poder jugar.</p>
+          </div>
+
+          <!-- Normal: en este aparato, contra Petunia (un partido o un mini torneo).
+               Online: cada quien en su celular o computador, en una sala. -->
+          <fieldset class="opciones">
+            <legend class="opciones__titulo">¿Cómo quieres jugar?</legend>
+            <div class="opciones__lista">
+              <label class="opcion opcion--grande">
+                <input class="opcion__radio" type="radio" name="donde" value="normal" checked>
+                <span class="opcion__texto">Normal <span class="opcion__detalle">Contra Petunia</span></span>
+              </label>
+              <label class="opcion opcion--grande">
+                <input class="opcion__radio" type="radio" name="donde" value="online">
+                <span class="opcion__texto">Online <span class="opcion__detalle">Salas y mini torneos</span></span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Solo en Normal: un partido suelto (eliges el rival) o un mini torneo
+               de las 16 selecciones (octavos, cuartos, semifinal y final) -->
+          <fieldset class="opciones" id="campoModo">
+            <legend class="opciones__titulo">¿Qué jugamos?</legend>
+            <div class="opciones__lista">
+              <label class="opcion opcion--grande">
+                <input class="opcion__radio" type="radio" name="tipo" value="partido" checked>
+                <span class="opcion__texto">Partido <span class="opcion__detalle">Tú eliges el rival</span></span>
+              </label>
+              <label class="opcion opcion--grande">
+                <input class="opcion__radio" type="radio" name="tipo" value="torneo">
+                <span class="opcion__texto">Mini torneo <span class="opcion__detalle">Desde octavos, con medalla</span></span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Selecciones: la tuya y la del rival. Las listas las llena script.js
+               y la camiseta de muestra cambia de color al elegir. -->
+          <fieldset class="duelo" id="campoDuelo">
+            <legend class="opciones__titulo" id="tituloDuelo">Selecciones</legend>
+            <div class="duelo__equipos">
+              <div class="duelo__lado">
+                <svg class="camiseta duelo__camiseta" id="vistaEquipo1" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                  <path class="camiseta__cuerpo" d="M11 3.2L5.4 5.2C3.9 5.8 3 6.8 2.5 8.4L1.2 13l4.9 1.6 1.5-3.4-.2 16.6c0 .8.6 1.2 1.4 1.3 4.8.6 9.6.6 14.4 0 .8-.1 1.4-.5 1.4-1.3l-.2-16.6 1.5 3.4 4.9-1.6-1.3-4.6c-.5-1.6-1.4-2.6-2.9-3.2L21 3.2c-1.4 1.6-8.6 1.6-10 0z"/>
+                  <path class="camiseta__rayas" d="M10.2 5.2h2.4v24h-2.4zM14.8 5.6h2.4v23.9h-2.4zM19.4 5.2h2.4v24h-2.4z"/>
+                  <path class="camiseta__banda" d="M7.6 10.5l4-5.1 12.9 15.6v5.5z"/>
+                  <path class="camiseta__costados" d="M7.6 12h1.2l-.2 16.9-1.2-.3zM24.4 12h-1.2l.2 16.9 1.2-.3z"/>
+                  <path class="camiseta__cuello" d="M10.1 3.6L16 10l5.9-6.4-1.6.3L16 7.8l-4.3-3.9z"/>
+                  <path class="camiseta__punos" d="M1.2 13l4.9 1.6.5-1.4-5-1.6zM30.8 13l-4.9 1.6-.5-1.4 5-1.6z"/>
+                  <path class="camiseta__escudo" d="M19.6 9.4h2.8v2c0 1.2-.8 1.9-1.4 2.2-.6-.3-1.4-1-1.4-2.2z"/>
+                </svg>
+                <label class="duelo__etiqueta" for="equipo1" id="etiquetaEquipo1">Tu equipo</label>
+                <select class="campo__entrada duelo__lista" id="equipo1" name="equipo1"></select>
+                <p class="duelo__nota" id="notaEquipo1"></p>
+                <p class="duelo__figura" id="figuraEquipo1"></p>
+              </div>
+              <span class="duelo__vs" aria-hidden="true">VS</span>
+              <div class="duelo__lado">
+                <svg class="camiseta duelo__camiseta" id="vistaEquipo2" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                  <path class="camiseta__cuerpo" d="M11 3.2L5.4 5.2C3.9 5.8 3 6.8 2.5 8.4L1.2 13l4.9 1.6 1.5-3.4-.2 16.6c0 .8.6 1.2 1.4 1.3 4.8.6 9.6.6 14.4 0 .8-.1 1.4-.5 1.4-1.3l-.2-16.6 1.5 3.4 4.9-1.6-1.3-4.6c-.5-1.6-1.4-2.6-2.9-3.2L21 3.2c-1.4 1.6-8.6 1.6-10 0z"/>
+                  <path class="camiseta__rayas" d="M10.2 5.2h2.4v24h-2.4zM14.8 5.6h2.4v23.9h-2.4zM19.4 5.2h2.4v24h-2.4z"/>
+                  <path class="camiseta__banda" d="M7.6 10.5l4-5.1 12.9 15.6v5.5z"/>
+                  <path class="camiseta__costados" d="M7.6 12h1.2l-.2 16.9-1.2-.3zM24.4 12h-1.2l.2 16.9 1.2-.3z"/>
+                  <path class="camiseta__cuello" d="M10.1 3.6L16 10l5.9-6.4-1.6.3L16 7.8l-4.3-3.9z"/>
+                  <path class="camiseta__punos" d="M1.2 13l4.9 1.6.5-1.4-5-1.6zM30.8 13l-4.9 1.6-.5-1.4 5-1.6z"/>
+                  <path class="camiseta__escudo" d="M19.6 9.4h2.8v2c0 1.2-.8 1.9-1.4 2.2-.6-.3-1.4-1-1.4-2.2z"/>
+                </svg>
+                <label class="duelo__etiqueta" for="equipo2" id="etiquetaEquipo2">Equipo de Petunia</label>
+                <select class="campo__entrada duelo__lista" id="equipo2" name="equipo2"></select>
+                <p class="duelo__nota" id="notaEquipo2"></p>
+                <p class="duelo__figura" id="figuraEquipo2"></p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="opciones" id="campoNivel">
+            <legend class="opciones__titulo">Nivel</legend>
+            <div class="opciones__lista">
+              <label class="opcion">
+                <input class="opcion__radio" type="radio" name="nivel" value="facil" checked>
+                <span class="opcion__texto">Fácil</span>
+              </label>
+              <label class="opcion">
+                <input class="opcion__radio" type="radio" name="nivel" value="dificil">
+                <span class="opcion__texto">Difícil</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Solo en Online: código de la sala para unirse (para crear una no hace falta) -->
+          <div class="campo" id="campoCodigo" hidden>
+            <label class="campo__etiqueta" for="codigoSala">Código de la sala <span class="campo__nota">(solo para unirte)</span></label>
+            <input class="campo__entrada campo__entrada--codigo" id="codigoSala" name="codigoSala" type="text" maxlength="5"
+                   autocomplete="off" autocapitalize="characters" spellcheck="false"
+                   aria-describedby="codigoAyuda codigoError">
+            <p id="codigoAyuda" class="campo__ayuda">Crea una sala y pásale el código a tus amigos, o escribe el código que te pasaron.</p>
+            <p id="codigoError" class="campo__error" role="alert" hidden>Escribe las 5 letras del código.</p>
+          </div>
+
+          <!-- Si algo falla en online (no hay internet, la sala no existe, se cerró...) -->
+          <p class="aviso-online" id="avisoOnline" role="alert" hidden></p>
+
+          <div class="formulario__acciones" id="accionesInicio">
+            <button class="boton boton--principal" type="submit" name="accion" value="normal" id="botonComenzar">Comenzar</button>
+            <button class="boton boton--principal" type="submit" name="accion" value="crear" id="botonCrearSala" hidden>Crear sala</button>
+            <button class="boton boton--principal" type="submit" name="accion" value="unirse" id="botonUnirse" hidden>Unirme</button>
+            <button class="boton boton--secundario" type="button" id="botonAtuendo" aria-haspopup="dialog">Atuendo</button>
+            <button class="boton boton--secundario" type="button" data-abre="dialogoAyuda" aria-haspopup="dialog">Cómo jugar</button>
+          </div>
+        </form>
+
+        <!-- Récords de esta visita: no se guardan, se borran al cerrar o recargar la página -->
+        <section class="records" aria-labelledby="tituloRecords">
+          <h2 id="tituloRecords" class="records__titulo">Récords</h2>
+          <p class="records__nota">De esta visita. No se guardan: al cerrar la página se borran.</p>
+          <dl class="records__lista">
+            <div class="records__fila">
+              <dt>Mejor racha de toques seguidos</dt>
+              <dd id="recordRacha">Sin récord aún</dd>
+            </div>
+            <div class="records__fila">
+              <dt>Más goles contra Petunia</dt>
+              <dd id="recordGoles">Sin récord aún</dd>
+            </div>
+          </dl>
+        </section>
+
+      </div>
+    </section>
+
+    <!-- ===================== SALA ONLINE =====================
+         Quien crea la sala recibe un código de 5 letras. Los demás entran con
+         ese código desde su propio celular o computador. Quien la creó elige
+         entre un amistoso (dos de la sala) o un mini torneo con todos. -->
+    <section id="pantallaSala" class="inicio sala" aria-labelledby="tituloSala" hidden>
+      <div class="inicio__tarjeta sala__tarjeta">
+        <!-- Columna 1: código, jugadores y salir. Columna 2: organizar y el cuadro.
+             (En el celular de pie van una debajo de la otra.) -->
+        <div class="sala__columna">
+
+          <header class="sala__cabecera">
+            <p class="saga">
+              <svg class="saga__flor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle class="saga__petalo" cx="12" cy="5.5" r="4"/>
+                <circle class="saga__petalo" cx="18.2" cy="10" r="4"/>
+                <circle class="saga__petalo" cx="15.8" cy="17.3" r="4"/>
+                <circle class="saga__petalo" cx="8.2" cy="17.3" r="4"/>
+                <circle class="saga__petalo" cx="5.8" cy="10" r="4"/>
+                <circle class="saga__centro" cx="12" cy="12" r="3.4"/>
+              </svg>
+              PetuGol online
+            </p>
+            <h2 id="tituloSala" class="sala__titulo">Sala <span class="sala__codigo" id="codigoVisible">·····</span></h2>
+            <p class="sala__estado" id="estadoSala" role="status">Conectando…</p>
+            <div class="sala__compartir" id="bloqueCompartir" hidden>
+              <button class="boton boton--secundario" type="button" id="botonCopiar">Copiar enlace</button>
+              <p class="campo__ayuda" id="ayudaCompartir">Pásales el código a tus amigos: lo escriben en Online y tocan «Unirme». También pueden abrir el enlace.</p>
+            </div>
+          </header>
+
+          <section class="sala__bloque" aria-labelledby="tituloJugadores">
+            <h3 class="sala__subtitulo" id="tituloJugadores">Jugadores <span class="sala__cuenta" id="cuentaJugadores">1 de 8</span></h3>
+            <ul class="sala__jugadores" id="listaJugadores"></ul>
+            <div class="campo sala__seleccion">
+              <label class="campo__etiqueta" for="equipoSala">Tu selección</label>
+              <select class="campo__entrada" id="equipoSala"></select>
+            </div>
+          </section>
+
+          <div class="sala__acciones">
+            <button class="boton boton--secundario" type="button" data-abre="dialogoAyuda" aria-haspopup="dialog">Cómo jugar</button>
+            <button class="boton boton--secundario" type="button" id="botonSalirSala">Salir de la sala</button>
+          </div>
+        </div>
+
+        <div class="sala__columna">
+
+          <!-- Solo lo ve quien creó la sala -->
+          <section class="sala__bloque" id="panelOrganizar" aria-labelledby="tituloOrganizar" hidden>
+            <h3 class="sala__subtitulo" id="tituloOrganizar">¿Qué jugamos?</h3>
+            <fieldset class="opciones">
+              <legend class="solo-lector">Tipo de juego</legend>
+              <div class="opciones__lista">
+                <label class="opcion">
+                  <input class="opcion__radio" type="radio" name="tipoSala" value="torneo" checked>
+                  <span class="opcion__texto">Mini torneo</span>
+                </label>
+                <label class="opcion">
+                  <input class="opcion__radio" type="radio" name="tipoSala" value="amistoso">
+                  <span class="opcion__texto">Amistoso</span>
+                </label>
+              </div>
+            </fieldset>
+            <div class="sala__amistoso" id="campoAmistoso" hidden>
+              <div class="campo">
+                <label class="campo__etiqueta" for="amistosoLocal">Juega</label>
+                <select class="campo__entrada" id="amistosoLocal"></select>
+              </div>
+              <span class="duelo__vs" aria-hidden="true">VS</span>
+              <div class="campo">
+                <label class="campo__etiqueta" for="amistosoVisita">contra</label>
+                <select class="campo__entrada" id="amistosoVisita"></select>
+              </div>
+            </div>
+            <p class="campo__ayuda" id="ayudaOrganizar">Juegan todos, por eliminación, hasta que quede un campeón. Partidos de 4 minutos.</p>
+            <p class="campo__error" id="errorOrganizar" role="alert" hidden></p>
+            <button class="boton boton--principal" type="button" id="botonEmpezarSala">¡Empezar!</button>
+          </section>
+
+          <p class="sala__espera" id="esperaAnfitrion" hidden>Quien creó la sala elige cuándo empezar.</p>
+
+          <!-- Cuadro del torneo (o el amistoso) con los marcadores en vivo -->
+          <section class="sala__bloque" id="panelCompetencia" aria-labelledby="tituloCompetencia" hidden>
+            <h3 class="sala__subtitulo" id="tituloCompetencia">Mini torneo</h3>
+            <div class="cuadro" id="cuadroTorneo"></div>
+            <figure class="sala__campeon" id="campeonSala" hidden>
+              <img class="sala__campeon-imagen" src="img/festejo.png"
+                   alt="Un perrito café y blanco sonríe feliz mostrando los dientes: ¡ganamos!">
+              <figcaption class="sala__campeon-texto" id="textoCampeon">¡Campeón!</figcaption>
+            </figure>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MINI TORNEO (NORMAL) =====================
+         Las 16 selecciones, por eliminación: octavos, cuartos, semifinal y final.
+         Tú juegas contra Petunia (que maneja a cada rival); los otros partidos
+         se juegan solos. Entre partido y partido se ve el cuadro. -->
+    <section id="pantallaTorneo" class="inicio sala torneo" aria-labelledby="tituloTorneo" hidden>
+      <div class="inicio__tarjeta sala__tarjeta">
+        <div class="sala__columna">
+          <header class="sala__cabecera">
+            <p class="saga">
+              <svg class="saga__flor" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle class="saga__petalo" cx="12" cy="5.5" r="4"/>
+                <circle class="saga__petalo" cx="18.2" cy="10" r="4"/>
+                <circle class="saga__petalo" cx="15.8" cy="17.3" r="4"/>
+                <circle class="saga__petalo" cx="8.2" cy="17.3" r="4"/>
+                <circle class="saga__petalo" cx="5.8" cy="10" r="4"/>
+                <circle class="saga__centro" cx="12" cy="12" r="3.4"/>
+              </svg>
+              Mini torneo
+            </p>
+            <h2 id="tituloTorneo" class="sala__titulo">Copa <span class="sala__codigo">Petunia</span></h2>
+            <p class="sala__estado" id="estadoTorneo" role="status">Cuartos de final</p>
+          </header>
+
+          <!-- El próximo partido (o cómo terminó el torneo) -->
+          <section class="sala__bloque torneo__proximo" aria-labelledby="tituloProximo">
+            <h3 class="sala__subtitulo" id="tituloProximo">Tu próximo partido</h3>
+            <p class="torneo__duelo" id="dueloTorneo"></p>
+            <!-- Medalla: de oro si sales campeón, de plata si pierdes la final -->
+            <p class="torneo__medalla" id="medallaTorneo" data-medalla="oro" hidden>
+              <svg class="medalla" viewBox="0 0 64 84" aria-hidden="true" focusable="false">
+              <path class="medalla__cinta" d="M12 0h15l11 34H23z"/>
+              <path class="medalla__cinta medalla__cinta--otra" d="M37 0h15L41 34H26z"/>
+              <circle class="medalla__disco" cx="32" cy="58" r="23"/>
+              <circle class="medalla__aro" cx="32" cy="58" r="17"/>
+              <path class="medalla__estrella" d="M32 46l3.5 7.1 7.8 1.1-5.6 5.5 1.3 7.8-7-3.7-7 3.7 1.3-7.8-5.6-5.5 7.8-1.1z"/>
+            </svg>
+              <span class="torneo__medalla-texto" id="textoMedallaTorneo">Medalla de oro</span>
+            </p>
+            <figure class="sala__campeon torneo__resultado" id="resultadoTorneo" hidden>
+              <img class="sala__campeon-imagen" id="imagenTorneo" src="img/festejo.png"
+                   alt="Un perrito café y blanco sonríe feliz mostrando los dientes: ¡ganamos!">
+              <figcaption class="sala__campeon-texto" id="textoResultadoTorneo">¡Campeón!</figcaption>
+            </figure>
+          </section>
+
+          <div class="sala__acciones">
+            <button class="boton boton--principal" type="button" id="botonJugarTorneo">Jugar</button>
+            <button class="boton boton--secundario" type="button" data-abre="dialogoAyuda" aria-haspopup="dialog">Cómo jugar</button>
+            <button class="boton boton--secundario" type="button" id="botonSalirTorneo">Salir del torneo</button>
+          </div>
+        </div>
+
+        <div class="sala__columna">
+          <section class="sala__bloque" aria-labelledby="tituloCuadroNormal">
+            <h3 class="sala__subtitulo" id="tituloCuadroNormal">Cuadro</h3>
+            <div class="cuadro" id="cuadroNormal"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PANTALLA DE JUEGO ===================== -->
+    <section id="pantallaJuego" class="juego" aria-labelledby="tituloPartido" hidden>
+      <h2 id="tituloPartido" class="solo-lector">Partido en juego</h2>
+
+      <!-- Marcador en una franja color ladrillo, como la pista de los juegos clásicos:
+           tú a la izquierda y el rival a la derecha. En cada punta hay un "palco"
+           con la camiseta de la selección; cuando ese equipo anota, ahí aparece la
+           imagen de festejo (o la de burla), arriba y sin tapar la cancha. -->
+      <header class="marcador" id="marcador">
+        <div class="equipo equipo--local">
+          <div class="palco" aria-hidden="true">
+            <svg class="camiseta palco__escudo" id="camisetaLocal" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path class="camiseta__cuerpo" d="M11 3.2L5.4 5.2C3.9 5.8 3 6.8 2.5 8.4L1.2 13l4.9 1.6 1.5-3.4-.2 16.6c0 .8.6 1.2 1.4 1.3 4.8.6 9.6.6 14.4 0 .8-.1 1.4-.5 1.4-1.3l-.2-16.6 1.5 3.4 4.9-1.6-1.3-4.6c-.5-1.6-1.4-2.6-2.9-3.2L21 3.2c-1.4 1.6-8.6 1.6-10 0z"/>
+              <path class="camiseta__rayas" d="M10.2 5.2h2.4v24h-2.4zM14.8 5.6h2.4v23.9h-2.4zM19.4 5.2h2.4v24h-2.4z"/>
+              <path class="camiseta__banda" d="M7.6 10.5l4-5.1 12.9 15.6v5.5z"/>
+              <path class="camiseta__costados" d="M7.6 12h1.2l-.2 16.9-1.2-.3zM24.4 12h-1.2l.2 16.9 1.2-.3z"/>
+              <path class="camiseta__cuello" d="M10.1 3.6L16 10l5.9-6.4-1.6.3L16 7.8l-4.3-3.9z"/>
+              <path class="camiseta__punos" d="M1.2 13l4.9 1.6.5-1.4-5-1.6zM30.8 13l-4.9 1.6-.5-1.4 5-1.6z"/>
+              <path class="camiseta__escudo" d="M19.6 9.4h2.8v2c0 1.2-.8 1.9-1.4 2.2-.6-.3-1.4-1-1.4-2.2z"/>
+            </svg>
+            <img class="palco__imagen" id="palcoLocal" src="img/festejo.png" alt="" hidden>
+          </div>
+          <p class="equipo__nombre"><span class="equipo__sigla" id="siglaLocal" aria-hidden="true">TÚ</span> <span class="equipo__completo" id="nombreLocal">Tú</span><span class="solo-lector" id="seleccionLocal"></span></p>
+          <p class="equipo__goles" id="golesLocal">0</p>
+          <span class="solo-lector" id="etiquetaPoderesLocal">Poderes activos de tu equipo</span>
+          <ul class="equipo__poderes" id="poderesLocal" aria-labelledby="etiquetaPoderesLocal"></ul>
+        </div>
+
+        <div class="marcador__centro">
+          <p class="marcador__reloj"><span class="solo-lector">Tiempo restante: </span><span id="reloj">3:00</span></p>
+          <p class="marcador__info" id="infoCentro">Racha: 0</p>
+          <div class="marcador__botones">
+            <button class="boton-hud" id="botonMenu" type="button" aria-haspopup="dialog" aria-keyshortcuts="Escape P">
+              <svg class="icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M4 7h16M4 12h16M4 17h16"/></svg>
+              <span class="boton-hud__texto">Menú</span>
+            </button>
+            <button class="boton-hud boton-hud--sonido" id="botonSonido" type="button" aria-pressed="true">
+              <svg class="icono icono--con-sonido" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__relleno" d="M4 9h4l5-4v14l-5-4H4z"/><path class="icono__trazo" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+              <svg class="icono icono--sin-sonido" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__relleno" d="M4 9h4l5-4v14l-5-4H4z"/><path class="icono__trazo" d="M16 9l5 6M21 9l-5 6"/></svg>
+              <span class="solo-lector">Sonido</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="equipo equipo--visitante">
+          <div class="palco" aria-hidden="true">
+            <svg class="camiseta palco__escudo" id="camisetaVisitante" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path class="camiseta__cuerpo" d="M11 3.2L5.4 5.2C3.9 5.8 3 6.8 2.5 8.4L1.2 13l4.9 1.6 1.5-3.4-.2 16.6c0 .8.6 1.2 1.4 1.3 4.8.6 9.6.6 14.4 0 .8-.1 1.4-.5 1.4-1.3l-.2-16.6 1.5 3.4 4.9-1.6-1.3-4.6c-.5-1.6-1.4-2.6-2.9-3.2L21 3.2c-1.4 1.6-8.6 1.6-10 0z"/>
+              <path class="camiseta__rayas" d="M10.2 5.2h2.4v24h-2.4zM14.8 5.6h2.4v23.9h-2.4zM19.4 5.2h2.4v24h-2.4z"/>
+              <path class="camiseta__banda" d="M7.6 10.5l4-5.1 12.9 15.6v5.5z"/>
+              <path class="camiseta__costados" d="M7.6 12h1.2l-.2 16.9-1.2-.3zM24.4 12h-1.2l.2 16.9 1.2-.3z"/>
+              <path class="camiseta__cuello" d="M10.1 3.6L16 10l5.9-6.4-1.6.3L16 7.8l-4.3-3.9z"/>
+              <path class="camiseta__punos" d="M1.2 13l4.9 1.6.5-1.4-5-1.6zM30.8 13l-4.9 1.6-.5-1.4 5-1.6z"/>
+              <path class="camiseta__escudo" d="M19.6 9.4h2.8v2c0 1.2-.8 1.9-1.4 2.2-.6-.3-1.4-1-1.4-2.2z"/>
+            </svg>
+            <img class="palco__imagen" id="palcoVisitante" src="img/festejo.png" alt="" hidden>
+          </div>
+          <p class="equipo__nombre"><span class="equipo__sigla" id="siglaVisitante" aria-hidden="true">PET</span> <span class="equipo__completo" id="nombreVisitante">Petunia</span><span class="solo-lector" id="seleccionVisitante"></span></p>
+          <p class="equipo__goles" id="golesVisitante">0</p>
+          <span class="solo-lector" id="etiquetaPoderesVisitante">Poderes activos del equipo rival</span>
+          <ul class="equipo__poderes" id="poderesVisitante" aria-labelledby="etiquetaPoderesVisitante"></ul>
+        </div>
+      </header>
+
+      <!-- Estadio: el canvas dibuja la cancha, la afición y los jugadores -->
+      <div class="estadio" id="estadio">
+        <canvas id="lienzo" class="estadio__lienzo" width="960" height="640" tabindex="0" role="img"
+                aria-label="Cancha de fútbol vista un poco inclinada, con pista color ladrillo y graderías con afición. La cámara sigue el balón."
+                aria-describedby="ayudaControles">
+          Tu navegador no puede mostrar la cancha del juego.
+        </canvas>
+        <!-- Cartel grande: ¡Comienza!, ¡GOOOL!, Muerte súbita (los lectores de pantalla lo reciben por la zona de anuncios) -->
+        <p class="cartel" id="cartel" hidden></p>
+        <!-- Aviso de poderes, saques y balón trabado -->
+        <p class="aviso" id="aviso" hidden></p>
+        <!-- Consejo: qué tecla o botón usar en ese momento (las primeras veces) -->
+        <p class="consejo" id="consejo" hidden></p>
+        <!-- Letrero de la repetición del gol -->
+        <p class="repeticion" id="repeticion" hidden><span class="repeticion__punto"></span>Repetición <span class="repeticion__saltar" id="repeticionSaltar">· pulsa una tecla para saltar</span></p>
+        <!-- Online: mientras llega la otra persona o si se corta la conexión un momento -->
+        <p class="espera-red" id="esperaRed" role="status" hidden>Esperando…</p>
+        <!-- Botones de juego, como en Dream League Soccer: Pase, Centro y Tiro.
+             En celular se tocan (y el joystick sale a la izquierda); en el computador
+             muestran la tecla de cada acción. Sin el balón cambian de nombre:
+             Pase → Cambiar, Centro → Presión, Tiro → Barrida. -->
+        <div class="mando" id="mando" hidden>
+        <div class="mando__grupo mando__grupo--j1" id="botonesJ1" role="group" aria-label="Botones de juego">
+          <button class="boton-mando boton-mando--pase" type="button" data-lado="0" data-accion="pase">
+            <svg class="icono boton-mando__icono boton-mando__icono--ataque" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M3 12h14M13 7l5 5-5 5"/></svg>
+            <svg class="icono boton-mando__icono boton-mando__icono--defensa" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M4 9h13l-3-3M20 15H7l3 3"/></svg>
+            <span class="boton-mando__texto">Pase</span>
+            <kbd class="boton-mando__tecla" aria-hidden="true">Z</kbd>
+          </button>
+          <button class="boton-mando boton-mando--centro" type="button" data-lado="0" data-accion="centro">
+            <svg class="icono boton-mando__icono boton-mando__icono--ataque" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M3 18C6 8 15 5 21 12M21 12l-.5-5M21 12l-5 .8"/></svg>
+            <svg class="icono boton-mando__icono boton-mando__icono--defensa" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M2 12h5M17 12h5M6 8l4 4-4 4M18 8l-4 4 4 4"/></svg>
+            <span class="boton-mando__texto">Centro</span>
+            <kbd class="boton-mando__tecla" aria-hidden="true">X</kbd>
+          </button>
+          <button class="boton-mando boton-mando--tiro" type="button" data-lado="0" data-accion="tiro">
+            <svg class="icono boton-mando__icono boton-mando__icono--ataque" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M16 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8M3 9h7M2 12h6M3 15h7"/></svg>
+            <svg class="icono boton-mando__icono boton-mando__icono--defensa" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M3 19h18M5 15l5-5 3 3 6-6"/></svg>
+            <span class="boton-mando__texto">Tiro</span>
+            <kbd class="boton-mando__tecla" aria-hidden="true">Espacio</kbd>
+          </button>
+        </div>
+        </div>
+      </div>
+
+      <!-- En el celular se juega acostado: si está de pie, se pide girarlo y el partido espera -->
+      <div class="girar" id="girar" hidden>
+        <svg class="girar__icono" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <rect class="girar__celular" x="20" y="8" width="24" height="44" rx="5"/>
+          <path class="girar__flecha" d="M50 40a20 20 0 0 1-14 14M36 54l1-6M36 54l6 2"/>
+        </svg>
+        <p class="girar__texto">Gira tu celular</p>
+        <p class="girar__nota" id="girarNota">PetuGol se juega con el celular acostado. El partido te espera.</p>
+      </div>
+
+      <p id="ayudaControles" class="solo-lector">
+        Manejas al jugador de tu equipo más cercano al balón. Contra Petunia te mueves con las flechas.
+        Con el balón: Z pase, X centro, Espacio tiro (sostén para cargar). Sin el balón: Z cambia de jugador,
+        X presión, Espacio barrida. Correr es automático. En celular se juega acostado, con un joystick a la izquierda
+        y tres botones a la derecha. Pulsa Escape o P para abrir el menú, donde también están los cambios de jugadores.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- ===================== MENÚ DE PAUSA ===================== -->
+  <!-- ===================== ATUENDO =====================
+       Camiseta (titular o alterna) y botines de cada equipo. Un muñeco
+       hace dominadas y da la vuelta para mostrar cómo queda el atuendo. -->
+  <dialog id="dialogoAtuendo" class="dialogo dialogo--atuendo" aria-labelledby="tituloAtuendo" aria-describedby="textoAtuendo">
+    <div class="dialogo__cabecera">
+      <h2 id="tituloAtuendo" class="dialogo__titulo">Atuendo</h2>
+      <button class="boton-cerrar" type="button" data-cierra="dialogoAtuendo">
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M6 6l12 12M18 6L6 18"/></svg>
+        <span class="solo-lector">Cerrar</span>
+      </button>
+    </div>
+    <p class="dialogo__texto" id="textoAtuendo">Elige la camiseta y los botines. El muñeco te muestra cómo quedan.</p>
+    <div class="atuendo">
+      <section class="atuendo__lado" aria-labelledby="atuendoTitulo1">
+        <h3 class="atuendo__titulo" id="atuendoTitulo1">Tu equipo</h3>
+        <canvas class="atuendo__muneco" id="muneco1" width="160" height="200" role="img" aria-label="Muñeco con el atuendo elegido"></canvas>
+        <fieldset class="atuendo__grupo">
+          <legend class="atuendo__leyenda">Camiseta</legend>
+          <div class="atuendo__opciones">
+            <label class="opcion opcion--chica">
+              <input class="opcion__radio" type="radio" name="camiseta1" value="titular" checked>
+              <span class="opcion__texto">Titular</span>
+            </label>
+            <label class="opcion opcion--chica">
+              <input class="opcion__radio" type="radio" name="camiseta1" value="alterna">
+              <span class="opcion__texto">Alterna</span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="atuendo__grupo">
+          <legend class="atuendo__leyenda">Botines</legend>
+          <div class="atuendo__botines">
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines1" value="negro" checked>
+              <span class="botin__muestra botin__muestra--negro" aria-hidden="true"></span>
+              <span class="botin__texto">Negros</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines1" value="blanco">
+              <span class="botin__muestra botin__muestra--blanco" aria-hidden="true"></span>
+              <span class="botin__texto">Blancos</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines1" value="dorado">
+              <span class="botin__muestra botin__muestra--dorado" aria-hidden="true"></span>
+              <span class="botin__texto">Dorados</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines1" value="fucsia">
+              <span class="botin__muestra botin__muestra--fucsia" aria-hidden="true"></span>
+              <span class="botin__texto">Fucsia</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines1" value="celeste">
+              <span class="botin__muestra botin__muestra--celeste" aria-hidden="true"></span>
+              <span class="botin__texto">Celestes</span>
+            </label>
+          </div>
+        </fieldset>
+      </section>
+      <section class="atuendo__lado" aria-labelledby="atuendoTitulo2">
+        <h3 class="atuendo__titulo" id="atuendoTitulo2">Equipo de Petunia</h3>
+        <canvas class="atuendo__muneco" id="muneco2" width="160" height="200" role="img" aria-label="Muñeco con el atuendo elegido"></canvas>
+        <fieldset class="atuendo__grupo">
+          <legend class="atuendo__leyenda">Camiseta</legend>
+          <div class="atuendo__opciones">
+            <label class="opcion opcion--chica">
+              <input class="opcion__radio" type="radio" name="camiseta2" value="titular" checked>
+              <span class="opcion__texto">Titular</span>
+            </label>
+            <label class="opcion opcion--chica">
+              <input class="opcion__radio" type="radio" name="camiseta2" value="alterna">
+              <span class="opcion__texto">Alterna</span>
+            </label>
+          </div>
+        </fieldset>
+        <fieldset class="atuendo__grupo">
+          <legend class="atuendo__leyenda">Botines</legend>
+          <div class="atuendo__botines">
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines2" value="negro" checked>
+              <span class="botin__muestra botin__muestra--negro" aria-hidden="true"></span>
+              <span class="botin__texto">Negros</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines2" value="blanco">
+              <span class="botin__muestra botin__muestra--blanco" aria-hidden="true"></span>
+              <span class="botin__texto">Blancos</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines2" value="dorado">
+              <span class="botin__muestra botin__muestra--dorado" aria-hidden="true"></span>
+              <span class="botin__texto">Dorados</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines2" value="fucsia">
+              <span class="botin__muestra botin__muestra--fucsia" aria-hidden="true"></span>
+              <span class="botin__texto">Fucsia</span>
+            </label>
+            <label class="botin">
+              <input class="botin__radio" type="radio" name="botines2" value="celeste">
+              <span class="botin__muestra botin__muestra--celeste" aria-hidden="true"></span>
+              <span class="botin__texto">Celestes</span>
+            </label>
+          </div>
+        </fieldset>
+      </section>
+    </div>
+    <p class="atuendo__nota" id="notaAtuendo" aria-live="polite"></p>
+    <div class="dialogo__botones">
+      <button class="boton boton--principal" type="button" data-cierra="dialogoAtuendo">Listo</button>
+    </div>
+  </dialog>
+
+  <dialog id="dialogoPausa" class="dialogo" aria-labelledby="tituloPausa" aria-describedby="textoPausa">
+    <h2 id="tituloPausa" class="dialogo__titulo">Pausa</h2>
+    <p id="textoPausa" class="dialogo__texto">El partido está detenido.</p>
+    <div class="dialogo__botones">
+      <button class="boton boton--principal" id="botonContinuar" type="button">Continuar</button>
+      <button class="boton boton--secundario" id="botonCambios" type="button" aria-haspopup="dialog">Cambios</button>
+      <button class="boton boton--secundario" id="botonReiniciar" type="button">Reiniciar partida</button>
+      <button class="boton boton--secundario" id="botonSalir" type="button">Salir al inicio</button>
+      <!-- Solo en online: el partido no se detiene; quien abandona pierde -->
+      <button class="boton boton--secundario" id="botonAbandonar" type="button" hidden>Abandonar el partido</button>
+      <button class="boton boton--secundario" type="button" data-abre="dialogoAyuda" aria-haspopup="dialog">Cómo jugar</button>
+    </div>
+  </dialog>
+
+  <!-- ===================== CAMBIOS =====================
+       Los jugadores se cansan: aquí sacas a uno de la cancha y entra uno del
+       banco (máximo 3 cambios por partido). Cada uno muestra su energía. -->
+  <dialog id="dialogoCambios" class="dialogo dialogo--cambios" aria-labelledby="tituloCambios" aria-describedby="textoCambios">
+    <div class="dialogo__cabecera">
+      <h2 id="tituloCambios" class="dialogo__titulo">Cambios</h2>
+      <button class="boton-cerrar" type="button" data-cierra="dialogoCambios">
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M6 6l12 12M18 6L6 18"/></svg>
+        <span class="solo-lector">Cerrar</span>
+      </button>
+    </div>
+    <p class="dialogo__texto" id="textoCambios">Te quedan 3 cambios. Elige quién sale y quién entra.</p>
+    <form class="cambios" id="formCambios">
+      <div class="cambios__columnas">
+        <fieldset class="cambios__grupo">
+          <legend class="cambios__titulo">Sale</legend>
+          <ul class="cambios__lista" id="listaSale"></ul>
+        </fieldset>
+        <fieldset class="cambios__grupo">
+          <legend class="cambios__titulo">Entra</legend>
+          <ul class="cambios__lista" id="listaEntra"></ul>
+        </fieldset>
+      </div>
+      <p class="cambios__aviso" id="avisoCambios" role="status"></p>
+      <div class="dialogo__botones">
+        <button class="boton boton--principal" type="submit" id="botonHacerCambio">Hacer el cambio</button>
+        <button class="boton boton--secundario" type="button" data-cierra="dialogoCambios">Volver</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===================== CÓMO JUGAR ===================== -->
+  <dialog id="dialogoAyuda" class="dialogo dialogo--ayuda" aria-labelledby="tituloAyuda">
+    <div class="dialogo__cabecera">
+      <h2 id="tituloAyuda" class="dialogo__titulo">Cómo jugar</h2>
+      <button class="boton-cerrar" type="button" data-cierra="dialogoAyuda">
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="icono__trazo" d="M6 6l12 12M18 6L6 18"/></svg>
+        <span class="solo-lector">Cerrar</span>
+      </button>
+    </div>
+
+    <div class="ayuda">
+      <section class="ayuda__bloque" aria-labelledby="ayudaObjetivo">
+        <h3 id="ayudaObjetivo" class="ayuda__titulo">Objetivo</h3>
+        <p>Cada equipo tiene 6 jugadores en la cancha (portero, 2 defensas, un volante y 2 delanteros) y 3 suplentes,
+          todos jugadores de verdad de cada selección. Tú manejas al de campo más cercano al balón
+          (el que tiene el anillo). No hay límite de goles: gana quien vaya ganando cuando
+          se acabe el tiempo: <strong>3 minutos</strong> contra Petunia y <strong>4 minutos</strong> en online. A la mitad
+          (1:30 o 2:00) hay <strong>medio tiempo</strong>: los equipos
+          <strong>cambian de cancha</strong> (ahora atacas hacia el otro lado) y saca el otro equipo.
+          Si hay empate, viene una <strong>muerte súbita</strong> de 45 segundos: el primer gol gana. Si nadie anota,
+          es empate (en los mini torneos no: la muerte súbita se repite hasta que alguien anote).</p>
+        <p>En <strong>Normal</strong> juegas contra Petunia: un <strong>Partido</strong> contra el rival que elijas
+          (al final puedes pedir la revancha o jugar contra <strong>otro rival</strong>) o un <strong>Mini torneo</strong>
+          con las 16 selecciones: octavos, cuartos, semifinal y final. Si pierdes, quedas eliminado. Si ganas la final te
+          llevas la <strong>Copa Petunia</strong> y la <strong>medalla de oro</strong>; si pierdes la final, la de plata.</p>
+        <p>Si las dos camisetas se parecen, el rival juega con su camiseta de visitante, y cada portero lleva un
+          color distinto a todos.</p>
+      </section>
+
+      <section class="ayuda__bloque" aria-labelledby="ayudaControlesTitulo">
+        <h3 id="ayudaControlesTitulo" class="ayuda__titulo">Controles</h3>
+        <p>Como en Dream League Soccer: solo tres botones. Sin el balón, cambian de nombre. Correr es automático:
+          si sigues en la misma dirección, tu jugador acelera solo.</p>
+        <table class="ayuda__tabla">
+          <caption class="solo-lector">Teclas y botones contra Petunia</caption>
+          <thead>
+            <tr><th scope="col">Computador</th><th scope="col">Celular</th><th scope="col">Con el balón</th><th scope="col">Sin el balón</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row"><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd></th><td>Joystick</td><td>Moverte</td><td>Moverte</td></tr>
+            <tr><th scope="row"><kbd>Z</kbd></th><td>Pase</td><td>Pase por el piso al compañero hacia donde miras</td><td><strong>Cambiar</strong> al jugador más cercano al balón</td></tr>
+            <tr><th scope="row"><kbd>X</kbd></th><td>Centro</td><td>Balón por el aire (una equis muestra dónde cae)</td><td><strong>Presión</strong>: mientras lo sostienes, un compañero también va</td></tr>
+            <tr><th scope="row"><kbd>Espacio</kbd></th><td>Tiro</td><td>Tiro: sostenlo para cargar y suéltalo (más fuerza, menos puntería)</td><td><strong>Barrida</strong> para quitar el balón</td></tr>
+          </tbody>
+        </table>
+        <ul class="ayuda__lista">
+          <li>Tu jugador tiene un anillo en los pies y una plaquita con su número encima. Corre más rápido solo cuando
+            mantienes la dirección un momento.</li>
+          <li>Cuando llevas el balón, una línea en el piso muestra hacia dónde va el tiro, y un circulito marca a quién va el pase.</li>
+          <li>El <strong>radar</strong> (la mini cancha) muestra a todos los jugadores con el color de su camiseta y el balón en blanco.</li>
+          <li><strong>Atuendo:</strong> en el inicio eliges camiseta titular o alterna y el color de los botines; un muñeco te muestra cómo quedan.
+            Si las dos camisetas se parecen, una cambia sola para que no se confundan.</li>
+          <li>Si el balón está suelto y muy cerca, <kbd>Espacio</kbd> remata de primera. Si un rival toca el balón que llevas, te lo quita.</li>
+          <li><strong>Celular:</strong> se juega con el celular acostado (si lo pones de pie, el partido espera).
+            Joystick abajo a la izquierda (o pon el dedo en cualquier parte de la cancha) y los tres botones a la derecha.</li>
+          <li><kbd>Esc</kbd> o <kbd>P</kbd>: menú de pausa (ahí están los <strong>Cambios</strong>). Durante una repetición,
+            cualquier tecla o toque la salta.</li>
+        </ul>
+      </section>
+
+      <section class="ayuda__bloque" aria-labelledby="ayudaOnline">
+        <h3 id="ayudaOnline" class="ayuda__titulo">Online: salas y mini torneos</h3>
+        <ul class="ayuda__lista">
+          <li>En el inicio elige <strong>Online</strong>. Una persona toca <strong>Crear sala</strong> y le sale un código de 5 letras.</li>
+          <li>Las demás escriben ese código y tocan <strong>Unirme</strong>, cada una desde su celular o computador. Caben hasta 8.</li>
+          <li>Quien creó la sala elige: <strong>Amistoso</strong> (escoge a dos de la sala) o <strong>Mini torneo</strong> (juegan todos por
+            eliminación hasta que quede un campeón). En la sala se ven los marcadores en vivo.</li>
+          <li>Cada quien empieza viendo a su equipo atacando hacia la derecha (en el segundo tiempo cambian de cancha)
+            y juega con los mismos botones y teclas de siempre.
+            El partido no se puede pausar: si abandonas, pierdes.</li>
+          <li>Se necesita internet. No se guarda nada: al cerrar la página, la sala desaparece.</li>
+        </ul>
+      </section>
+
+      <section class="ayuda__bloque" aria-labelledby="ayudaPlantel">
+        <h3 id="ayudaPlantel" class="ayuda__titulo">Figuras, cansancio y cambios</h3>
+        <ul class="ayuda__lista">
+          <li>Cada selección tiene su <strong>figura</strong>, su jugador más famoso (Messi, Cristiano, Luis Díaz…). Tiene una
+            estrellita dorada encima, corre un poquito más, patea más fuerte, tiene mejor puntería y se cansa menos.</li>
+          <li>Los jugadores se <strong>cansan</strong> cuando corren. Encima del tuyo sale una barrita de energía y, si está muy
+            cansado, suda (gotitas azules). Cansado corre más lento y patea más suave. En el medio tiempo recuperan un poco.</li>
+          <li><strong>Cambios:</strong> en el menú, toca <strong>Cambios</strong>, elige quién sale y quién entra. Hay 3 suplentes
+            y 3 cambios por partido; el que sale no puede volver a entrar. Petunia también hace sus cambios.
+            En online el partido no se detiene: tu cambio se hace en la próxima pausa del juego (un saque, una falta o un gol).</li>
+        </ul>
+      </section>
+
+      <section class="ayuda__bloque" aria-labelledby="ayudaFaltas">
+        <h3 id="ayudaFaltas" class="ayuda__titulo">Faltas y tarjetas</h3>
+        <ul class="ayuda__lista">
+          <li>Una <strong>barrida</strong> que le pega al rival en vez de al balón es <strong>falta</strong>. Desde atrás es más grave.</li>
+          <li>Puede salir <strong>tarjeta amarilla</strong> o <strong>roja</strong>. Dos amarillas son roja. Con roja, el jugador se va
+            de la cancha y su equipo juega con uno menos.</li>
+          <li>Falta fuera del área: <strong>tiro libre</strong>. Apunta y usa <strong>Tiro</strong> para patear al arco, o Pase o Centro
+            para jugar con un compañero. Falta dentro del área: <strong>penal</strong>. Apunta y toca cualquier botón para patear.</li>
+        </ul>
+      </section>
+
+      <section class="ayuda__bloque" aria-labelledby="ayudaSaques">
+        <h3 id="ayudaSaques" class="ayuda__titulo">Cuando el balón sale</h3>
+        <ul class="ayuda__lista">
+          <li><strong>Por un lado (banda):</strong> saque de banda para el equipo que no la tocó de último. El jugador lanza con las manos.</li>
+          <li><strong>Por el fondo, si la sacó el que defiende:</strong> tiro de esquina para el rival.</li>
+          <li><strong>Por el fondo, si la sacó el que ataca:</strong> saque de meta; saca el portero.</li>
+          <li>En la banda y en la esquina, tu jugador espera con el balón: apunta con el joystick o las teclas (una flecha en el piso
+            muestra hacia dónde) y saca con <strong>Pase</strong> (corto) o con <strong>Centro</strong> o <strong>Tiro</strong> (largo).
+            Si te demoras mucho, saca solo.</li>
+        </ul>
+      </section>
+
+      <section class="ayuda__bloque" aria-labelledby="ayudaPoderes">
+        <h3 id="ayudaPoderes" class="ayuda__titulo">Poderes</h3>
+        <p>Pasa el balón por encima de una esfera de color. El poder es para el equipo que tocó el balón de último.</p>
+        <ul class="ayuda__poderes">
+          <li class="poder poder--mini"><span class="poder__icono" data-poder="mini"></span><span><strong>Balón mini:</strong> el balón se encoge y cuesta más verlo.</span></li>
+          <li class="poder poder--turbo"><span class="poder__icono" data-poder="turbo"></span><span><strong>Turbo:</strong> tu equipo corre más y patea más fuerte.</span></li>
+          <li class="poder poder--multi"><span class="poder__icono" data-poder="multi"></span><span><strong>Multibalón:</strong> salen 2 balones extra por unos segundos. Si alguien los toca, salen disparados al arco.</span></li>
+          <li class="poder poder--gigante"><span class="poder__icono" data-poder="gigante"></span><span><strong>Jugadores gigantes:</strong> tu equipo crece y tapa más.</span></li>
+          <li class="poder poder--escudo"><span class="poder__icono" data-poder="escudo"></span><span><strong>Escudo:</strong> salva un gol en tu arco.</span></li>
+          <li class="poder poder--hielo"><span class="poder__icono" data-poder="hielo"></span><span><strong>Hielo:</strong> congela al equipo rival un momento.</span></li>
+          <li class="poder poder--zigzag"><span class="poder__icono" data-poder="zigzag"></span><span><strong>Zigzag:</strong> los tiros de tu equipo van culebreando.</span></li>
+        </ul>
+      </section>
+
+    </div>
+
+    <div class="dialogo__botones">
+      <button class="boton boton--principal" type="button" data-cierra="dialogoAyuda">Entendido</button>
+    </div>
+  </dialog>
+
+  <!-- ===================== ONLINE: ¡TE TOCA! =====================
+       Cuando te toca un partido en la sala. Entra solo a los pocos segundos. -->
+  <dialog id="dialogoTeToca" class="dialogo dialogo--te-toca" aria-labelledby="tituloTeToca" aria-describedby="textoTeToca">
+    <h2 id="tituloTeToca" class="dialogo__titulo">¡Te toca!</h2>
+    <p id="textoTeToca" class="dialogo__texto">Tu partido va a empezar.</p>
+    <p class="te-toca__cuenta"><span class="solo-lector">Entras en </span><span id="cuentaTeToca">8</span><span class="solo-lector"> segundos</span></p>
+    <div class="dialogo__botones">
+      <button class="boton boton--principal" id="botonEntrar" type="button">Entrar a la cancha</button>
+    </div>
+  </dialog>
+
+  <!-- ===================== PANTALLA FINAL ===================== -->
+  <dialog id="dialogoFinal" class="dialogo dialogo--final" aria-labelledby="tituloFinal" aria-describedby="textoFinal">
+    <div class="final">
+      <figure class="final__figura" id="figuraFinal">
+        <!-- Imagen de festejo: se usa cuando alguien hace gol y cuando ganas (en empate no hay imagen) -->
+        <img id="imgFestejo" class="final__imagen" src="img/festejo.png"
+             alt="Un perrito café y blanco sonríe feliz mostrando los dientes: ¡ganamos!" hidden>
+        <!-- Imagen de burla: se muestra completa, sin recortar -->
+        <img id="imgBurla" class="final__imagen" src="img/burla.png"
+             alt="Un perrito se ríe con la boca abierta dentro de un balde, mientras una mano amarilla lo señala: ¡JA, JA!" hidden>
+      </figure>
+
+      <div class="final__contenido">
+        <h2 id="tituloFinal" class="dialogo__titulo">¡Ganaste!</h2>
+        <p id="marcadorFinal" class="final__marcador">5 – 0</p>
+        <p id="textoFinal" class="dialogo__texto">Fin del partido.</p>
+        <!-- Estadísticas del partido: posesión, tiros, faltas y tarjetas de cada equipo -->
+        <table class="final__tabla">
+          <caption class="solo-lector">Estadísticas del partido</caption>
+          <thead>
+            <tr>
+              <th scope="col" id="tablaNombre0">Tú</th>
+              <th scope="col"><span class="solo-lector">Dato</span></th>
+              <th scope="col" id="tablaNombre1">Petunia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td id="tablaPosesion0">50 %</td><th scope="row">Posesión</th><td id="tablaPosesion1">50 %</td></tr>
+            <tr><td id="tablaTiros0">0</td><th scope="row">Tiros</th><td id="tablaTiros1">0</td></tr>
+            <tr><td id="tablaFaltas0">0</td><th scope="row">Faltas</th><td id="tablaFaltas1">0</td></tr>
+            <tr><td id="tablaTarjetas0">0</td><th scope="row">Tarjetas</th><td id="tablaTarjetas1">0</td></tr>
+          </tbody>
+        </table>
+        <!-- Mini torneo: la medalla cuando ganas la final (oro) o la pierdes (plata) -->
+        <p class="torneo__medalla final__medalla" id="medallaFinal" data-medalla="oro" hidden>
+          <svg class="medalla" viewBox="0 0 64 84" aria-hidden="true" focusable="false">
+          <path class="medalla__cinta" d="M12 0h15l11 34H23z"/>
+          <path class="medalla__cinta medalla__cinta--otra" d="M37 0h15L41 34H26z"/>
+          <circle class="medalla__disco" cx="32" cy="58" r="23"/>
+          <circle class="medalla__aro" cx="32" cy="58" r="17"/>
+          <path class="medalla__estrella" d="M32 46l3.5 7.1 7.8 1.1-5.6 5.5 1.3 7.8-7-3.7-7 3.7 1.3-7.8-5.6-5.5 7.8-1.1z"/>
+          </svg>
+          <span class="torneo__medalla-texto" id="textoMedallaFinal">Medalla de oro</span>
+        </p>
+        <ul id="logrosFinal" class="final__logros"></ul>
+        <div class="dialogo__botones">
+          <button class="boton boton--principal" id="botonRevancha" type="button">Revancha</button>
+          <button class="boton boton--secundario" id="botonOtroRival" type="button">Otro rival</button>
+          <button class="boton boton--secundario" id="botonInicioFinal" type="button">Volver al inicio</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Zona de anuncios para lectores de pantalla (goles, poderes, eventos) -->
+  <div id="anuncios" class="solo-lector" aria-live="polite" aria-atomic="true"></div>
+
+</body>
+</html>

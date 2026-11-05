@@ -8294,6 +8294,18 @@ function mostrarErrorOrganizar(texto) {
 let qrDibujado = '';
 let promesaQR = null;
 
+// Enlace de la sala. Si el juego está dentro de otra página del mismo sitio
+// (por ejemplo futbol.html del portafolio), el enlace lleva a esa página.
+function enlaceSala(codigo) {
+  let pagina = location;
+  try {
+    if (window.parent !== window && window.parent.location.origin === location.origin) pagina = window.parent.location;
+  } catch (error) {
+    pagina = location;
+  }
+  return `${pagina.origin}${pagina.pathname}?sala=${codigo}`;
+}
+
 function cargarLibreriaQR() {
   if (window.QRCode) return Promise.resolve(true);
   if (promesaQR) return promesaQR;
@@ -8327,7 +8339,7 @@ function dibujarQRSala(codigo) {
     }
     el.qrSalaImagen.replaceChildren();
     new window.QRCode(el.qrSalaImagen, {
-      text: `${location.origin}${location.pathname}?sala=${codigo}`,
+      text: enlaceSala(codigo),
       width: 300,
       height: 300,
       colorDark: '#000000',
@@ -8345,7 +8357,7 @@ function dibujarQRSala(codigo) {
 function compartirSala() {
   const codigo = red.codigo;
   const web = location.protocol === 'http:' || location.protocol === 'https:';
-  const enlace = web ? `${location.origin}${location.pathname}?sala=${codigo}` : '';
+  const enlace = web ? enlaceSala(codigo) : '';
   const texto = `¡Juega PetuGol conmigo! Elige Online y únete a la sala ${codigo}.`;
   const avisar = (mensaje) => {
     el.botonCopiar.textContent = mensaje;

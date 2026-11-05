@@ -25,6 +25,8 @@
    El JavaScript también lee estos colores para pintar la cancha en el canvas.
    ===================================================================== */
 :root {
+  /* Códigos de sala: letra de máquina de escribir, cada letra bien distinta */
+  --fuente-codigo: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
   /* Noche de estadio: fondos y textos */
   --noche: #0b1712;
   --noche-media: #13261d;
@@ -903,8 +905,9 @@ kbd {
 
 /* Código de la sala: letras grandes y separadas, como en un tablero */
 .campo__entrada--codigo {
-  font-family: var(--fuente-titulo);
-  font-size: 1.4rem;
+  font-family: var(--fuente-codigo);
+  font-size: 1.5rem;
+  font-weight: 700;
   letter-spacing: 0.3em;
   text-transform: uppercase;
 }
@@ -2215,15 +2218,29 @@ kbd {
   letter-spacing: 0.04em;
 }
 
-/* El código, grande, para dictarlo o copiarlo */
+/* El código, grande, para dictarlo o copiarlo: una letra en cada casilla */
 .sala__codigo {
-  display: block;
-  margin-top: 0.2rem;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  font-family: var(--fuente-codigo);
+  font-size: clamp(1.9rem, 9vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.sala__letra {
+  display: grid;
+  place-items: center;
+  min-width: 1.35em;
+  padding: 0.2em 0.12em;
+  border: 2px solid var(--local);
+  border-radius: 0.4rem;
+  background-color: var(--noche);
   color: var(--local);
-  font-size: clamp(2.2rem, 10vw, 3rem);
-  line-height: 1.1;
-  letter-spacing: 0.18em;
-  text-shadow: 3px 3px 0 var(--visitante);
 }
 
 .sala__estado {

@@ -498,9 +498,18 @@ if (consultaMovimiento.addEventListener) {
 const COLOR = {};
 const KITS = {};
 let FUENTE_TITULO = 'sans-serif';
+// ¿Se leyeron todos los colores? En algunos celulares (sobre todo iPhone y dentro
+// del portafolio) el juego arranca antes de que llegue style.css: los colores
+// salen vacíos y la cancha queda en blanco. Si pasa, se vuelven a leer más tarde.
+let coloresListos = false;
+
+function asegurarColores() {
+  if (!coloresListos) leerColores();
+}
 
 function leerColores() {
   const estilos = getComputedStyle(document.documentElement);
+  const valor = (nombre) => estilos.getPropertyValue(nombre).trim() || '#ffffff';
   const nombres = [
     'noche', 'tinta', 'sombra', 'reflector', 'reflector-apagado', 'alerta',
     'local', 'visitante', 'guantes', 'botines', 'ojos',
@@ -514,11 +523,11 @@ function leerColores() {
     'estrella', 'sudor', 'energia-alta', 'energia-media', 'energia-baja', 'tarjeta-amarilla', 'tarjeta-roja'
   ];
   for (const nombre of nombres) {
-    COLOR[nombre] = estilos.getPropertyValue('--' + nombre).trim() || '#ffffff';
+    COLOR[nombre] = valor('--' + nombre);
   }
   // Camisetas de cada selección (por ejemplo --col-camiseta, --col-visita...)
   for (const equipo of EQUIPOS) {
-    const leer = (parte) => estilos.getPropertyValue(`--${equipo.codigo.toLowerCase()}-${parte}`).trim() || '#ffffff';
+    const leer = (parte) => valor(`--${equipo.codigo.toLowerCase()}-${parte}`);
     KITS[equipo.codigo] = {
       camiseta: leer('camiseta'),
       detalle: leer('detalle'),
@@ -531,6 +540,14 @@ function leerColores() {
   }
   FUENTE_TITULO = estilos.getPropertyValue('--fuente-titulo').trim() || 'sans-serif';
   COLOR.polvo = mezclar(COLOR['cesped-claro'], COLOR.cal, 0.5); // polvito del césped
+  // Si --noche está, la hoja de estilos ya cargó (a un equipo le puede faltar un color opcional)
+  coloresListos = Boolean(estilos.getPropertyValue('--noche').trim());
+  // Los balones ya pintados guardan los colores viejos: se vuelven a pintar
+  try {
+    hojasBalon.clear();
+  } catch (error) {
+    // Al arrancar todavía no existen: no hay nada que borrar
+  }
 }
 
 
@@ -580,6 +597,7 @@ const BOTINES = Object.freeze({ negro: 'negros', blanco: 'blancos', dorado: 'dor
 
 // atuendo: { camiseta: ['titular'|'alterna', ...], botines: ['negro', ...] } (opcional)
 function armarKits(codigo0, codigo1, atuendo = null) {
+  asegurarColores();
   const uniforme = (codigo, visita) => {
     const equipo = buscarEquipo(codigo);
     const k = KITS[equipo.codigo];
@@ -1333,20 +1351,27 @@ function medirCancha() {
   const caja = el.estadio.getBoundingClientRect();
   if (caja.width < 2 || caja.height < 2) return false;
 
-  // Densidad de píxeles: más nitidez en computador, menos trabajo en celular
-  // (con 1.5 un celular lento se mantiene en 60 cuadros por segundo)
-  // En monitores gigantes se limita a unos 8 millones de píxeles (como una pantalla 4K)
-  const dprMaximo = Math.sqrt(8.3e6 / (caja.width * caja.height));
-  const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, esTactil ? 1.5 : 2, dprMaximo));
-  const ancho = Math.round(caja.width * dpr);
-  const alto = Math.round(caja.height * dpr);
-  el.lienzo.width = ancho;
-  el.lienzo.height = alto;
-
   const vertical = caja.height > caja.width;
   const plan = vertical ? CAMARA.vertical : (esTactil ? CAMARA.tactil : CAMARA.horizontal);
   // Escala: lo que quepa de la zona pedida, sin pasar del máximo
   const sCss = Math.min(caja.width / plan.ancho, caja.height / (plan.alto * plan.inclinacion), CAMARA.maximo);
+
+  // Tamaño del estadio completo (el fondo pre-dibujado) en píxeles CSS
+  const mundoU = (vertical ? ANCHO + 2 * CANCHA.margenBanda : LARGO + 2 * CANCHA.margenFondo) * sCss;
+  const mundoV = (vertical ? LARGO + 2 * CANCHA.margenFondo + 30 : ANCHO + 2 * CANCHA.margenBanda + 20) * sCss * plan.inclinacion;
+
+  // Densidad de píxeles: más nitidez en computador, menos trabajo en celular
+  // (con 1.5 un celular lento se mantiene en 60 cuadros por segundo)
+  // En monitores gigantes se limita a unos 8 millones de píxeles (como una pantalla 4K)
+  const dprMaximo = Math.sqrt(8.3e6 / (caja.width * caja.height));
+  // Safari (iPhone, iPad y Mac) deja en blanco los lienzos de más de unos
+  // 16 millones de píxeles: el fondo del estadio nunca pasa de ese tamaño
+  const dprFondo = Math.min(Math.sqrt(15e6 / (mundoU * mundoV)), 8000 / mundoU, 8000 / mundoV);
+  const dpr = Math.max(0.5, Math.min(window.devicePixelRatio || 1, esTactil ? 1.5 : 2, dprMaximo, dprFondo));
+  const ancho = Math.round(caja.width * dpr);
+  const alto = Math.round(caja.height * dpr);
+  el.lienzo.width = ancho;
+  el.lienzo.height = alto;
 
   vista.vertical = vertical;
   el.estadio.classList.toggle('estadio--vertical', vertical);
@@ -1498,6 +1523,7 @@ function dibujarOndas() {
    lienzo grande. En cada cuadro solo se copia el pedazo que ve la cámara.
    ===================================================================== */
 function pintarFondo() {
+  asegurarColores();
   fondo.width = Math.ceil((vista.uMax - vista.uMin) * vista.s);
   fondo.height = Math.ceil((vista.vMax - vista.vMin) * vista.s * vista.k);
   const f = ctxFondo;
@@ -4320,8 +4346,27 @@ function saltarRepeticion() {
       primero, así lo de adelante lo tapa (como en la vida real).
    4) Lo que va encima de todo: partículas, burbujas y joysticks.
    ===================================================================== */
+// Dibuja el cuadro. Si algo falla (por ejemplo, el celular borró los lienzos
+// al cambiar de app), no se congela: en el siguiente cuadro se mide y se
+// repinta el estadio de nuevo.
+let avisoDibujo = false;
+
 function dibujar() {
   if (!vista.listo) return;
+  try {
+    dibujarTodo();
+  } catch (error) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    vista.listo = false;
+    if (!avisoDibujo) {
+      avisoDibujo = true;
+      console.error('PetuGol: no se pudo dibujar la cancha', error);
+    }
+  }
+}
+
+function dibujarTodo() {
   const t = estado.reloj;
 
   copiarFondo();
@@ -6630,6 +6675,8 @@ let ultimoTiempo = null;
 
 function cuadro(ahora) {
   idCuadro = requestAnimationFrame(cuadro);
+  // Si la cancha todavía no tiene tamaño (o hubo que repintarla), se intenta medir otra vez
+  if (estado.pantalla === 'juego' && !vista.listo) medirCancha();
   if (ultimoTiempo === null) ultimoTiempo = ahora;
   // Máximo 1/30 de segundo por paso: si el celular se demora, el juego no "salta"
   let dt = Math.min((ahora - ultimoTiempo) / 1000, 1 / 30);
@@ -7290,8 +7337,12 @@ function prepararEventos() {
     } else {
       Sonido.reanudar();
       if (estado.pantalla === 'juego' && estado.fase !== 'final') mantenerPantallaEncendida();
+      // Al volver (por ejemplo, después de abrir la cámara para el QR), el celular
+      // puede haber borrado los lienzos: se repinta el estadio
+      if (estado.pantalla === 'juego') vista.listo = false;
     }
   });
+  el.lienzo.addEventListener('contextrestored', () => { vista.listo = false; });
 
   // Al girar el celular o cambiar el tamaño de la ventana: se mide y se repinta el estadio
   const alCambiarTamano = () => {
@@ -7316,6 +7367,15 @@ function prepararEventos() {
 
 function iniciar() {
   leerColores();
+  // Si style.css llegó tarde, al terminar de cargar la página se leen otra vez
+  window.addEventListener('load', () => {
+    if (coloresListos) return;
+    leerColores();
+    if (estado.pantalla === 'juego' && vista.listo) {
+      pintarFondo();
+      dibujar();
+    }
+  });
   estado.kits = armarKits(estado.codigos[0], estado.codigos[1]);
   crearAficion();
   // Íconos de la ayuda, tomados de la misma lista de poderes
@@ -7644,7 +7704,7 @@ async function crearSala() {
 async function unirseASala(codigo) {
   mostrarPantallaSala();
   red.codigo = codigo;
-  el.codigoVisible.textContent = codigo;
+  ponerCodigoVisible(codigo);
   ponerEstadoSala(`Buscando la sala ${codigo}…`);
   try {
     await cargarPeerJS();
@@ -8103,7 +8163,7 @@ function mostrarPantallaSala() {
   el.pantallaInicio.hidden = true;
   el.pantallaJuego.hidden = true;
   el.pantallaSala.hidden = false;
-  el.codigoVisible.textContent = '·····';
+  ponerCodigoVisible('·····');
   el.bloqueCompartir.hidden = true;
   el.qrSala.hidden = true;
   qrDibujado = '';
@@ -8114,6 +8174,20 @@ function mostrarPantallaSala() {
   el.panelCompetencia.hidden = true;
   el.equipoSala.value = red.seleccion;
   el.botonSalirSala.focus();
+}
+
+// El código de la sala, una letra en cada casilla (se lee mejor que todo junto)
+function ponerCodigoVisible(codigo) {
+  if (el.codigoVisible.dataset.codigo === codigo) return;
+  el.codigoVisible.dataset.codigo = codigo;
+  const letras = Array.from(codigo);
+  el.codigoVisible.replaceChildren(...letras.map((letra) => {
+    const casilla = document.createElement('span');
+    casilla.className = 'sala__letra';
+    casilla.textContent = letra;
+    return casilla;
+  }));
+  el.codigoVisible.setAttribute('aria-label', /[A-Z]/.test(codigo) ? letras.join(' ') : 'sin código todavía');
 }
 
 function ponerEstadoSala(texto) {
@@ -8127,7 +8201,7 @@ function dibujarSala() {
   const yo = red.miId;
   const nombreDe = (id) => (c && c.nombres[id]) || (sala.jugadores.find((j) => j.id === id) || {}).nombre || 'Alguien';
 
-  el.codigoVisible.textContent = sala.codigo;
+  ponerCodigoVisible(sala.codigo);
   el.bloqueCompartir.hidden = false;
   dibujarQRSala(sala.codigo);
   el.cuentaJugadores.textContent = `${sala.jugadores.length} de ${MAXIMO_SALA}`;

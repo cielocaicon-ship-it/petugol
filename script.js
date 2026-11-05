@@ -133,12 +133,22 @@ const EN_CANCHA = FORMACION.length; // jugadores de cada equipo en la cancha
 
 // Cámara: cuántas unidades de cancha se ven a lo ancho y a lo alto de la pantalla,
 // y cuánto se "aplasta" el piso para verlo inclinado (1 = visto desde arriba)
+// Se ve la cancha completa, de arco a arco: ancho = largo de la cancha + los dos arcos,
+// alto = ancho de la cancha + la cabeza de los jugadores que están en la raya de arriba.
 const CAMARA = Object.freeze({
-  horizontal: { ancho: 720, alto: 430, inclinacion: 0.72 },
-  vertical: { ancho: 400, alto: 700, inclinacion: 0.8 },
-  tactil: { ancho: 620, alto: 370, inclinacion: 0.72 },   // celular acostado: más cerca, muñecos más grandes
+  horizontal: { ancho: 968, alto: 572, inclinacion: 0.72 },
+  vertical: { ancho: 544, alto: 1004, inclinacion: 0.8 },
+  tactil: { ancho: 968, alto: 572, inclinacion: 0.72 },   // celular acostado: también la cancha completa
   maximo: 2           // píxeles por unidad como máximo (en pantallas muy grandes)
 });
+
+// Zona de la cancha que siempre debe quedar a la vista (en ejes de pantalla u, v)
+function zonaCancha(vertical) {
+  const arco = CANCHA.fondoArco + 8;
+  return vertical
+    ? { u0: -12, u1: ANCHO + 12, v0: -arco - 40, v1: LARGO + arco }
+    : { u0: -arco, u1: LARGO + arco, v0: -40, v1: ANCHO + 12 };
+}
 
 // Poderes: nombre, duración (segundos), color (variable de CSS) e ícono (trazo SVG de 24×24)
 const PODERES = Object.freeze({
@@ -1352,9 +1362,15 @@ function medirCancha() {
   if (caja.width < 2 || caja.height < 2) return false;
 
   const vertical = caja.height > caja.width;
+  vista.vertical = vertical;
+  el.estadio.classList.toggle('estadio--vertical', vertical);
+  // En el celular acostado el marcador flota encima de la cancha: cuánto tapa (px CSS)
+  const marcador = el.marcador.getBoundingClientRect();
+  const libreArriba = marcador.bottom > caja.top ? Math.ceil(marcador.bottom - caja.top) : 0;
   const plan = vertical ? CAMARA.vertical : (esTactil ? CAMARA.tactil : CAMARA.horizontal);
-  // Escala: lo que quepa de la zona pedida, sin pasar del máximo
-  const sCss = Math.min(caja.width / plan.ancho, caja.height / (plan.alto * plan.inclinacion), CAMARA.maximo);
+  // Escala: que quepa la cancha completa debajo del marcador, sin pasar del máximo
+  const altoLibre = Math.max(caja.height * 0.5, caja.height - libreArriba);
+  const sCss = Math.min(caja.width / plan.ancho, altoLibre / (plan.alto * plan.inclinacion), CAMARA.maximo);
 
   // Tamaño del estadio completo (el fondo pre-dibujado) en píxeles CSS
   const mundoU = (vertical ? ANCHO + 2 * CANCHA.margenBanda : LARGO + 2 * CANCHA.margenFondo) * sCss;
@@ -1373,11 +1389,7 @@ function medirCancha() {
   el.lienzo.width = ancho;
   el.lienzo.height = alto;
 
-  vista.vertical = vertical;
-  el.estadio.classList.toggle('estadio--vertical', vertical);
-  // En el celular acostado el marcador flota encima de la cancha: cuánto tapa (px CSS)
-  const marcador = el.marcador.getBoundingClientRect();
-  vista.libreArriba = marcador.bottom > caja.top ? Math.ceil(marcador.bottom - caja.top) : 0;
+  vista.libreArriba = libreArriba;
   vista.k = plan.inclinacion;
   vista.s = sCss * dpr;
   vista.dpr = dpr;
@@ -1411,8 +1423,14 @@ function centrarCamara(x, y, deUna = false, dt = 0) {
     (max - min <= visible ? (min + max) / 2 : limitar(valor, min + visible / 2, max - visible / 2));
   // Si el marcador flota arriba, el balón se centra en lo que queda libre debajo
   const corrimiento = (vista.libreArriba * vista.dpr) / 2 / (vista.s * vista.k);
-  const objetivoU = limitarEje(u, vista.uMin, vista.uMax, anchoVisible);
-  const objetivoV = limitarEje(v - corrimiento, vista.vMin, vista.vMax, altoVisible);
+  // Si la cancha completa cabe, la cámara se queda quieta mostrándola de arco a arco
+  const zona = zonaCancha(vista.vertical);
+  const altoLibre = altoVisible - 2 * corrimiento;
+  const cabeU = anchoVisible >= zona.u1 - zona.u0 - 0.5;
+  const cabeV = altoLibre >= zona.v1 - zona.v0 - 0.5;
+  vista.canchaCompleta = cabeU && cabeV;
+  const objetivoU = cabeU ? (zona.u0 + zona.u1) / 2 : limitarEje(u, vista.uMin, vista.uMax, anchoVisible);
+  const objetivoV = cabeV ? (zona.v0 + zona.v1) / 2 - corrimiento : limitarEje(v - corrimiento, vista.vMin, vista.vMax, altoVisible);
   if (deUna) {
     vista.camU = objetivoU;
     vista.camV = objetivoV;
@@ -3175,11 +3193,40 @@ function pensarJugador(j, dt) {
     }
   } else if (j.tarea === 'cubrir') {
     const propio = { x: j.equipo === 0 ? 0 : LARGO, y: MITAD };
-    irHacia(j, propio.x + (balon.x - propio.x) * 0.55, propio.y + (balon.y - propio.y) * 0.55, rapidez, dt);
+    const punto = lejosDeCompaneros(j, propio.x + (balon.x - propio.x) * 0.55, propio.y + (balon.y - propio.y) * 0.55);
+    irHacia(j, punto.x, punto.y, rapidez, dt);
   } else {
-    const punto = puntoDeFormacion(j, balon, tiene);
+    const formacion = puntoDeFormacion(j, balon, tiene);
+    const punto = lejosDeCompaneros(j, formacion.x, formacion.y);
     irHacia(j, punto.x, punto.y, rapidez * 0.85, dt);
   }
+}
+
+// Si el punto al que va un jugador queda encima de un compañero, se corre a un
+// lado: así dos del mismo equipo no se quedan pegados corriendo como uno solo.
+const ESPACIO_COMPANEROS = 52;
+
+function lejosDeCompaneros(j, x, y) {
+  let px = x;
+  let py = y;
+  for (const otro of enJuego()) {
+    if (otro === j || otro.equipo !== j.equipo || otro.rol === 'portero') continue;
+    let dx = px - otro.x;
+    let dy = py - otro.y;
+    let d = Math.hypot(dx, dy);
+    if (d >= ESPACIO_COMPANEROS) continue;
+    if (d < 1) {
+      // Justo encima: se abre hacia la banda que le queda más cerca a su puesto
+      dx = 0;
+      dy = (j.indice || 0) % 2 === 0 ? 1 : -1;
+      d = 1;
+    }
+    const falta = ESPACIO_COMPANEROS - d;
+    px += (dx / d) * falta;
+    py += (dy / d) * falta;
+  }
+  const r = radioDe(j);
+  return { x: limitar(px, r, LARGO - r), y: limitar(py, r, ANCHO - r) };
 }
 
 function pensarConBalon(j, balon, p, dt) {
@@ -4442,6 +4489,8 @@ function cajaDelRadar() {
 
 function dibujarRadar() {
   if (!estado.equipos.length || !estado.kits.length) return;
+  // Si se ve la cancha completa, el radar sobra (y taparía un pedazo de la cancha)
+  if (vista.canchaCompleta) return;
   const caja = cajaDelRadar();
   const dpr = vista.dpr;
   const tamU = vista.vertical ? ANCHO : LARGO;

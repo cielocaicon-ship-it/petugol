@@ -418,6 +418,7 @@ const el = {
   campoCodigo: $('campoCodigo'),
   codigoSala: $('codigoSala'),
   codigoError: $('codigoError'),
+  codigoAyuda: $('codigoAyuda'),
   botonComenzar: $('botonComenzar'),
   botonCrearSala: $('botonCrearSala'),
   botonUnirse: $('botonUnirse'),
@@ -426,6 +427,8 @@ const el = {
   codigoVisible: $('codigoVisible'),
   estadoSala: $('estadoSala'),
   bloqueCompartir: $('bloqueCompartir'),
+  qrSala: $('qrSala'),
+  qrSalaImagen: $('qrSalaImagen'),
   botonCopiar: $('botonCopiar'),
   cuentaJugadores: $('cuentaJugadores'),
   listaJugadores: $('listaJugadores'),
@@ -7112,6 +7115,7 @@ function prepararFormulario() {
   if (desdeEnlace.length === 5) {
     el.form.querySelector('input[name="donde"][value="online"]').checked = true;
     el.codigoSala.value = desdeEnlace;
+    el.codigoAyuda.textContent = `Te invitaron a la sala ${desdeEnlace}. Escribe tu usuario y toca «Unirme».`;
   }
   actualizarDonde();
   actualizarSelector();
@@ -8101,6 +8105,8 @@ function mostrarPantallaSala() {
   el.pantallaSala.hidden = false;
   el.codigoVisible.textContent = '·····';
   el.bloqueCompartir.hidden = true;
+  el.qrSala.hidden = true;
+  qrDibujado = '';
   el.listaJugadores.replaceChildren();
   el.cuentaJugadores.textContent = '';
   el.panelOrganizar.hidden = true;
@@ -8123,6 +8129,7 @@ function dibujarSala() {
 
   el.codigoVisible.textContent = sala.codigo;
   el.bloqueCompartir.hidden = false;
+  dibujarQRSala(sala.codigo);
   el.cuentaJugadores.textContent = `${sala.jugadores.length} de ${MAXIMO_SALA}`;
 
   // Lista de jugadores, cada uno con la camiseta de su selección
@@ -8280,6 +8287,58 @@ function actualizarOrganizar(sala, forzar) {
 function mostrarErrorOrganizar(texto) {
   el.errorOrganizar.textContent = texto;
   el.errorOrganizar.hidden = false;
+}
+
+// QR con el enlace de la sala (…?sala=ABCDE): quien lo escanea entra directo.
+// La librería se carga solo la primera vez que alguien abre una sala.
+let qrDibujado = '';
+let promesaQR = null;
+
+function cargarLibreriaQR() {
+  if (window.QRCode) return Promise.resolve(true);
+  if (promesaQR) return promesaQR;
+  promesaQR = new Promise((resolver) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = () => resolver(Boolean(window.QRCode));
+    script.onerror = () => {
+      promesaQR = null;
+      resolver(false);
+    };
+    document.head.appendChild(script);
+  });
+  return promesaQR;
+}
+
+function dibujarQRSala(codigo) {
+  const web = location.protocol === 'http:' || location.protocol === 'https:';
+  if (!web || !codigo) {
+    el.qrSala.hidden = true;
+    return;
+  }
+  if (qrDibujado === codigo) {
+    el.qrSala.hidden = false;
+    return;
+  }
+  cargarLibreriaQR().then((hayLibreria) => {
+    if (!hayLibreria || !red.sala || red.sala.codigo !== codigo) {
+      el.qrSala.hidden = true;
+      return;
+    }
+    el.qrSalaImagen.replaceChildren();
+    new window.QRCode(el.qrSalaImagen, {
+      text: `${location.origin}${location.pathname}?sala=${codigo}`,
+      width: 300,
+      height: 300,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: window.QRCode.CorrectLevel.M
+    });
+    const imagen = el.qrSalaImagen.querySelector('img');
+    if (imagen) imagen.alt = '';
+    qrDibujado = codigo;
+    el.qrSala.hidden = false;
+  });
 }
 
 // Compartir el enlace de la sala (en el celular, con el menú de compartir)

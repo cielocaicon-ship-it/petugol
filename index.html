@@ -207,8 +207,12 @@
             <h2 id="tituloSala" class="sala__titulo">Sala <span class="sala__codigo" id="codigoVisible">·····</span></h2>
             <p class="sala__estado" id="estadoSala" role="status">Conectando…</p>
             <div class="sala__compartir" id="bloqueCompartir" hidden>
+              <figure class="sala__qr" id="qrSala" hidden>
+                <div class="sala__qr-imagen" id="qrSalaImagen" role="img" aria-label="Código QR para entrar a esta sala"></div>
+                <figcaption class="campo__ayuda">¿No tienen el juego abierto? Que escaneen este QR con la cámara del celular y entran directo a la sala.</figcaption>
+              </figure>
               <button class="boton boton--secundario" type="button" id="botonCopiar">Copiar enlace</button>
-              <p class="campo__ayuda" id="ayudaCompartir">Pásales el código a tus amigos: lo escriben en Online y tocan «Unirme». También pueden abrir el enlace.</p>
+              <p class="campo__ayuda" id="ayudaCompartir">Pásales el código a tus amigos: lo escriben en Online y tocan «Unirme». También pueden escanear el QR o abrir el enlace.</p>
             </div>
           </header>
 

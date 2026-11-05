@@ -2239,6 +2239,33 @@ kbd {
   margin-top: 0.75rem;
 }
 
+/* QR para entrar a la sala escaneando con el celular */
+.sala__qr {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  text-align: center;
+}
+
+.sala__qr[hidden] {
+  display: none;
+}
+
+.sala__qr-imagen {
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  line-height: 0;
+}
+
+.sala__qr-imagen img,
+.sala__qr-imagen canvas {
+  display: block;
+  width: 9.5rem;
+  height: 9.5rem;
+}
+
 .sala__bloque {
   display: grid;
   gap: 0.6rem;
